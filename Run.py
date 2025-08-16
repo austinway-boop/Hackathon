@@ -17,6 +17,10 @@ def index():
 def assets(filename):
     return send_from_directory('Assets', filename)
 
+@app.route('/Sound/<path:filename>')
+def sounds(filename):
+    return send_from_directory('Sound', filename)
+
 @app.route('/api/shop')
 def api_shop():
     return jsonify(get_shop_data())
@@ -40,8 +44,20 @@ def api_buy_seed():
     slot_index = data.get('slot_index')
     pot_index = data.get('pot_index')
     
+    print(f"🛒 DEBUG: Purchase request - slot_index: {slot_index}, pot_index: {pot_index}")
+    
     state = get_game_state()
+    print(f"💰 DEBUG: Player coins: {state.coins}")
+    print(f"🏪 DEBUG: Shop has {len(state.shop.slots)} slots")
+    
+    if slot_index < len(state.shop.slots):
+        slot = state.shop.slots[slot_index]
+        print(f"📦 DEBUG: Slot {slot_index} - species: {slot.species_id}, stock: {slot.stock}, price: {slot.base_price}")
+    else:
+        print(f"❌ DEBUG: Invalid slot index {slot_index}")
+    
     success = state.buy_seed(slot_index, pot_index)
+    print(f"✅ DEBUG: Purchase result: {success}")
     
     return jsonify({
         'success': success,

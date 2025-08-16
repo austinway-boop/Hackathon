@@ -128,7 +128,7 @@
             background-position: center bottom;
             width: 100px;
             height: 100px;
-            cursor: pointer;
+            cursor: default; /* No longer clickable - just show growth progress on hover */
             transition: all 0.3s ease;
             filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
             position: relative;
@@ -542,28 +542,64 @@
             pointer-events: none !important; /* No more interactions */
             animation: none !important; /* Stop pulsing */
             transition: none !important; /* Disable normal transitions */
+            /* Make the flying bean more prominent */
+            transform: scale(1.2) !important;
+            filter: drop-shadow(0 0 15px rgba(255, 215, 0, 1.0)) drop-shadow(0 0 30px rgba(255, 215, 0, 0.7)) !important;
         }
 
         @keyframes beanFlyToMoney {
             0% {
-                transform: scale(var(--final-scale)) rotate(var(--final-rotation));
+                transform: scale(1.2) rotate(0deg);
                 opacity: 1;
-                filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+                filter: drop-shadow(0 0 15px rgba(255, 215, 0, 1.0)) drop-shadow(0 0 30px rgba(255, 215, 0, 0.7));
             }
             25% {
-                transform: scale(calc(var(--final-scale) * 1.5)) rotate(calc(var(--final-rotation) + 180deg));
+                transform: scale(1.5) rotate(180deg);
                 opacity: 1;
-                filter: drop-shadow(0 0 20px rgba(255, 215, 0, 1.0)) drop-shadow(0 0 40px rgba(255, 215, 0, 0.6));
+                filter: drop-shadow(0 0 25px rgba(255, 215, 0, 1.2)) drop-shadow(0 0 50px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 75px rgba(255, 255, 255, 0.4));
+            }
+            50% {
+                transform: scale(1.3) rotate(360deg);
+                opacity: 1;
+                filter: drop-shadow(0 0 30px rgba(255, 215, 0, 1.4)) drop-shadow(0 0 60px rgba(255, 215, 0, 0.9)) drop-shadow(0 0 90px rgba(255, 255, 255, 0.5));
             }
             75% {
-                transform: scale(calc(var(--final-scale) * 0.8)) rotate(calc(var(--final-rotation) + 540deg));
+                transform: scale(1.1) rotate(540deg);
                 opacity: 0.9;
-                filter: drop-shadow(0 0 25px rgba(255, 215, 0, 1.2)) drop-shadow(0 0 50px rgba(255, 215, 0, 0.8));
+                filter: drop-shadow(0 0 35px rgba(255, 215, 0, 1.5)) drop-shadow(0 0 70px rgba(255, 215, 0, 1.0)) drop-shadow(0 0 105px rgba(255, 255, 255, 0.6));
             }
             100% {
-                transform: scale(0.2) rotate(calc(var(--final-rotation) + 720deg));
+                transform: scale(0.8) rotate(720deg);
+                opacity: 0.7;
+                filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1.6)) drop-shadow(0 0 80px rgba(255, 215, 0, 1.1)) drop-shadow(0 0 120px rgba(255, 255, 255, 0.7));
+            }
+        }
+
+        /* Trail effect for flying beans */
+        .vine-bean.flying-to-money::before {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            left: -10px;
+            top: -10px;
+            background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0.1) 50%, transparent 100%);
+            border-radius: 50%;
+            animation: trailPulse 0.3s ease-out infinite;
+        }
+
+        @keyframes trailPulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.6;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.3;
+            }
+            100% {
+                transform: scale(1.5);
                 opacity: 0;
-                filter: drop-shadow(0 0 30px rgba(255, 215, 0, 1.5)) drop-shadow(0 0 60px rgba(255, 215, 0, 1.0));
             }
         }
 
@@ -648,6 +684,147 @@
             opacity: 0.8;
             transition: all 0.5s ease-out;
         }
+
+        /* Special effects for shiny (silver) beans - 3% chance, 200% more valuable */
+        .vine-bean.rarity-shiny {
+            background: linear-gradient(45deg, 
+                rgba(192, 192, 192, 0.3), 
+                rgba(255, 255, 255, 0.6), 
+                rgba(192, 192, 192, 0.3), 
+                rgba(255, 255, 255, 0.6)) !important;
+            background-blend-mode: overlay !important;
+            box-shadow: 0 0 20px rgba(192, 192, 192, 0.7), 
+                       inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+            animation: silverShimmer 2s ease-in-out infinite alternate, beanPulse 2s ease-in-out infinite alternate !important;
+        }
+
+        .vine-bean.rarity-shiny:hover:not(.clicked):not(.flying-to-money) {
+            transform: scale(calc(var(--final-scale) * 1.4)) rotate(var(--final-rotation)) !important;
+            filter: drop-shadow(0 0 25px rgba(192, 192, 192, 1)) !important;
+            box-shadow: 0 0 30px rgba(192, 192, 192, 1), 
+                       inset 0 0 25px rgba(255, 255, 255, 0.5) !important;
+        }
+
+        @keyframes silverShimmer {
+            0% {
+                background-position: -200% 0;
+                filter: brightness(1.2) contrast(1.1);
+            }
+            100% {
+                background-position: 200% 0;
+                filter: brightness(1.4) contrast(1.2);
+            }
+        }
+
+        /* Special effects for golden beans - 3% chance, 500% more valuable */
+        .vine-bean.rarity-golden {
+            background: linear-gradient(45deg, 
+                rgba(255, 215, 0, 0.4), 
+                rgba(255, 255, 255, 0.8), 
+                rgba(255, 215, 0, 0.4), 
+                rgba(255, 255, 255, 0.8)) !important;
+            background-blend-mode: overlay !important;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.9), 
+                       inset 0 0 25px rgba(255, 255, 255, 0.4) !important;
+            animation: goldenGlow 1.5s ease-in-out infinite alternate, beanPulse 2s ease-in-out infinite alternate !important;
+        }
+
+        .vine-bean.rarity-golden:hover:not(.clicked):not(.flying-to-money) {
+            transform: scale(calc(var(--final-scale) * 1.5)) rotate(var(--final-rotation)) !important;
+            filter: drop-shadow(0 0 35px rgba(255, 215, 0, 1)) !important;
+            box-shadow: 0 0 40px rgba(255, 215, 0, 1), 
+                       inset 0 0 30px rgba(255, 255, 255, 0.6) !important;
+        }
+
+        @keyframes goldenGlow {
+            0% {
+                background-position: -200% 0;
+                filter: brightness(1.3) contrast(1.2) saturate(1.2);
+            }
+            100% {
+                background-position: 200% 0;
+                filter: brightness(1.6) contrast(1.4) saturate(1.4);
+            }
+        }
+
+        /* Enhanced flying effects for special beans */
+        .vine-bean.rarity-shiny.flying-to-money {
+            box-shadow: 0 0 40px rgba(192, 192, 192, 1) !important;
+            animation: silverTrail 0.1s linear infinite !important;
+        }
+
+        .vine-bean.rarity-golden.flying-to-money {
+            box-shadow: 0 0 50px rgba(255, 215, 0, 1) !important;
+            animation: goldenTrail 0.1s linear infinite !important;
+        }
+
+        @keyframes silverTrail {
+            0% { filter: brightness(1.4) contrast(1.2); }
+            50% { filter: brightness(1.6) contrast(1.3); }
+            100% { filter: brightness(1.4) contrast(1.2); }
+        }
+
+        @keyframes goldenTrail {
+            0% { filter: brightness(1.5) contrast(1.3) saturate(1.3); }
+            50% { filter: brightness(1.8) contrast(1.5) saturate(1.5); }
+            100% { filter: brightness(1.5) contrast(1.3) saturate(1.3); }
+        }
+
+        /* Growth Tooltip Styles */
+        .growth-tooltip {
+            background: linear-gradient(135deg, #2C3E50, #34495E);
+            border: 2px solid #3498DB;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+            animation: tooltipFadeIn 0.2s ease-out;
+            max-width: 200px;
+        }
+
+        .growth-tooltip .tooltip-header {
+            font-weight: bold;
+            color: #3498DB;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+
+        .growth-tooltip .tooltip-progress {
+            margin-bottom: 6px;
+            color: #BDC3C7;
+        }
+
+        .growth-tooltip .tooltip-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(52, 73, 94, 0.8);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .growth-tooltip .tooltip-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27AE60, #2ECC71);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
+        }
+
+        @keyframes tooltipFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateX(-50%) translateY(5px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+
 
         /* Inventory Panel Styles */
         .inventory-overlay {
@@ -839,6 +1016,114 @@
             margin-bottom: 15px;
         }
 
+        /* Seed Tooltip Styles */
+        .seed-tooltip {
+            position: fixed;
+            background: linear-gradient(135deg, #2C3E50, #34495E);
+            border: 3px solid #3498DB;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.4),
+                0 0 20px rgba(52, 152, 219, 0.3),
+                inset 0 2px 4px rgba(255, 255, 255, 0.1);
+            z-index: 1500;
+            pointer-events: none;
+            opacity: 0;
+            transform: scale(0.8) translateY(10px);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            min-width: 280px;
+            max-width: 320px;
+            color: white;
+            font-family: 'Courier New', monospace;
+        }
+
+        .seed-tooltip.visible {
+            opacity: 1;
+            transform: scale(1) translateY(0px);
+        }
+
+        .tooltip-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(52, 152, 219, 0.3);
+        }
+
+        .tooltip-icon {
+            width: 40px;
+            height: 40px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin-right: 12px;
+            border-radius: 8px;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
+        }
+
+        .tooltip-title {
+            flex: 1;
+        }
+
+        .tooltip-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+
+        .tooltip-rarity {
+            font-size: 12px;
+            margin: 2px 0 0 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tooltip-rarity.common { color: #95A5A6; }
+        .tooltip-rarity.uncommon { color: #3498DB; }
+        .tooltip-rarity.rare { color: #9B59B6; }
+        .tooltip-rarity.legendary { color: #F39C12; }
+        .tooltip-rarity.mythical { color: #E74C3C; }
+        .tooltip-rarity.ultra-mythical { color: #8E44AD; }
+        .tooltip-rarity.godly { 
+            background: linear-gradient(45deg, #F39C12, #E74C3C, #9B59B6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+
+        .tooltip-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .tooltip-stat {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .stat-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+            opacity: 0.7;
+        }
+
+        .tooltip-description {
+            font-size: 12px;
+            font-style: italic;
+            color: #BDC3C7;
+            text-align: center;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(52, 152, 219, 0.2);
+        }
+
         /* Drag and Drop Styles */
         .dragging-seed {
             position: fixed;
@@ -938,6 +1223,27 @@
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
         }
 
+        .shop-timer {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        .shop-timer span {
+            color: white;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        #timerDisplay {
+            color: #FFE082 !important;
+            text-shadow: 0 0 5px rgba(255, 224, 130, 0.5) !important;
+        }
+
         .shop-close {
             background: none;
             border: none;
@@ -1020,6 +1326,40 @@
             filter: drop-shadow(0 0 8px rgba(243, 156, 18, 0.8)) drop-shadow(0 0 16px rgba(243, 156, 18, 0.5)) drop-shadow(0 0 24px rgba(243, 156, 18, 0.3));
         }
 
+        .shop-item.rarity-mythical .shop-item-icon {
+            filter: drop-shadow(0 0 8px rgba(233, 30, 99, 0.8)) drop-shadow(0 0 16px rgba(233, 30, 99, 0.5)) drop-shadow(0 0 24px rgba(233, 30, 99, 0.3));
+        }
+
+        .shop-item.rarity-ultra_mythical .shop-item-icon {
+            filter: drop-shadow(0 0 8px rgba(156, 39, 176, 0.9)) drop-shadow(0 0 16px rgba(156, 39, 176, 0.6)) drop-shadow(0 0 32px rgba(156, 39, 176, 0.4));
+        }
+
+        .shop-item.rarity-godly .shop-item-icon {
+            filter: 
+                drop-shadow(0 0 10px rgba(255, 215, 0, 1.0)) 
+                drop-shadow(0 0 20px rgba(255, 69, 0, 0.8)) 
+                drop-shadow(0 0 30px rgba(255, 20, 147, 0.6))
+                drop-shadow(0 0 40px rgba(138, 43, 226, 0.4));
+            animation: godlyPulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes godlyPulse {
+            0% { 
+                filter: 
+                    drop-shadow(0 0 10px rgba(255, 215, 0, 1.0)) 
+                    drop-shadow(0 0 20px rgba(255, 69, 0, 0.8)) 
+                    drop-shadow(0 0 30px rgba(255, 20, 147, 0.6))
+                    drop-shadow(0 0 40px rgba(138, 43, 226, 0.4));
+            }
+            100% { 
+                filter: 
+                    drop-shadow(0 0 15px rgba(255, 215, 0, 1.0)) 
+                    drop-shadow(0 0 25px rgba(255, 69, 0, 1.0)) 
+                    drop-shadow(0 0 35px rgba(255, 20, 147, 0.8))
+                    drop-shadow(0 0 50px rgba(138, 43, 226, 0.6));
+            }
+        }
+
         .shop-item.available:hover .shop-item-icon {
             transform: scale(1.15);
         }
@@ -1040,6 +1380,22 @@
             filter: drop-shadow(0 0 12px rgba(243, 156, 18, 1.0)) drop-shadow(0 0 24px rgba(243, 156, 18, 0.7)) drop-shadow(0 0 36px rgba(243, 156, 18, 0.4));
         }
 
+        .shop-item.available:hover.rarity-mythical .shop-item-icon {
+            filter: drop-shadow(0 0 12px rgba(233, 30, 99, 1.0)) drop-shadow(0 0 24px rgba(233, 30, 99, 0.7)) drop-shadow(0 0 36px rgba(233, 30, 99, 0.4));
+        }
+
+        .shop-item.available:hover.rarity-ultra_mythical .shop-item-icon {
+            filter: drop-shadow(0 0 15px rgba(156, 39, 176, 1.0)) drop-shadow(0 0 30px rgba(156, 39, 176, 0.8)) drop-shadow(0 0 45px rgba(156, 39, 176, 0.5));
+        }
+
+        .shop-item.available:hover.rarity-godly .shop-item-icon {
+            filter: 
+                drop-shadow(0 0 15px rgba(255, 215, 0, 1.0)) 
+                drop-shadow(0 0 30px rgba(255, 69, 0, 1.0)) 
+                drop-shadow(0 0 45px rgba(255, 20, 147, 0.8))
+                drop-shadow(0 0 60px rgba(138, 43, 226, 0.6));
+        }
+
         .shop-item.unavailable .shop-item-icon {
             filter: drop-shadow(0 0 6px rgba(127, 140, 141, 0.4));
             opacity: 0.5;
@@ -1056,6 +1412,66 @@
             border: 2px solid #8B4513;
             text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 5px;
+        }
+
+        .shop-item-stock {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            text-shadow: none;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .shop-item-stock.low-stock {
+            background: linear-gradient(135deg, #FF6B6B, #E74C3C);
+            color: white;
+            animation: lowStockPulse 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes lowStockPulse {
+            0% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        .shop-item-status {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin-top: 3px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .shop-item-status.too-expensive {
+            background: linear-gradient(135deg, #E74C3C, #C0392B);
+            color: white;
+            border: 1px solid #A93226;
+            animation: expensivePulse 2s ease-in-out infinite alternate;
+        }
+
+        .shop-item-status.out-of-stock {
+            background: linear-gradient(135deg, #95A5A6, #7F8C8D);
+            color: #2C3E50;
+            border: 1px solid #5D6D7E;
+            animation: stockPulse 1.8s ease-in-out infinite alternate;
+        }
+
+        @keyframes expensivePulse {
+            0% { opacity: 0.8; box-shadow: 0 0 5px rgba(231, 76, 60, 0.3); }
+            100% { opacity: 1; box-shadow: 0 0 10px rgba(231, 76, 60, 0.6); }
+        }
+
+        @keyframes stockPulse {
+            0% { opacity: 0.7; }
+            100% { opacity: 0.9; }
         }
 
 
@@ -1073,10 +1489,266 @@
             border-color: #BDC3C7;
         }
 
-        .shop-item-unavailable {
-            color: #E74C3C;
+        /* Purchase Modal Styles */
+        .purchase-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .purchase-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .purchase-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.7);
+            background: linear-gradient(145deg, #2C3E50, #34495E);
+            border: 3px solid #4CAF50;
+            border-radius: 20px;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                0 0 20px rgba(76, 175, 80, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            z-index: 1001;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            min-width: 400px;
+            max-width: 500px;
+        }
+
+        .purchase-modal.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .purchase-modal-content {
+            padding: 0;
+        }
+
+        .purchase-header {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            padding: 20px;
+            border-radius: 17px 17px 0 0;
+            border-bottom: 2px solid #1B5E20;
+        }
+
+        .purchase-header h3 {
+            margin: 0;
+            color: white;
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .purchase-body {
+            padding: 25px;
+        }
+
+        .purchase-item-preview {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .purchase-item-icon {
+            width: 60px;
+            height: 60px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            border-radius: 10px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .purchase-item-details {
+            flex-grow: 1;
+        }
+
+        .purchase-item-details h4 {
+            margin: 0 0 5px 0;
+            color: white;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+        }
+
+        .purchase-item-rarity {
+            margin: 0 0 5px 0;
             font-family: 'Courier New', monospace;
             font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .purchase-item-rarity.common { color: #95A5A6; }
+        .purchase-item-rarity.uncommon { color: #3498DB; }
+        .purchase-item-rarity.rare { color: #9B59B6; }
+        .purchase-item-rarity.legendary { color: #F39C12; }
+        .purchase-item-rarity.mythical { color: #E91E63; }
+        .purchase-item-rarity.ultra_mythical { color: #9C27B0; }
+        .purchase-item-rarity.godly { 
+            background: linear-gradient(90deg, #FFD700, #FF4500, #FF1493, #8A2BE2);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+
+        .purchase-item-stock {
+            margin: 0;
+            color: #BDC3C7;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+
+        .purchase-price-section {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #FFD700;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .purchase-price {
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .purchase-balance, .purchase-remaining {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: white;
+            margin: 5px 0;
+        }
+
+        .purchase-remaining #purchaseRemainingAmount {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .purchase-remaining #purchaseRemainingAmount.negative {
+            color: #E74C3C;
+        }
+
+        .purchase-buttons {
+            display: flex;
+            gap: 15px;
+            padding: 0 25px 25px;
+        }
+
+        .purchase-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .purchase-confirm {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: white;
+            border: 2px solid #1B5E20;
+        }
+
+        .purchase-confirm:hover {
+            background: linear-gradient(135deg, #5CBF60, #388E3C);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .purchase-cancel {
+            background: linear-gradient(135deg, #E74C3C, #C0392B);
+            color: white;
+            border: 2px solid #A93226;
+        }
+
+        .purchase-cancel:hover {
+            background: linear-gradient(135deg, #EC7063, #CD6155);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .purchase-btn-icon {
+            font-size: 18px;
+        }
+
+        /* Toast Notification Styles */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #34495E, #2C3E50);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 2px solid #4CAF50;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            z-index: 2000;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 350px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast-success {
+            border-color: #4CAF50;
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+        }
+
+        .toast-error {
+            border-color: #E74C3C;
+            background: linear-gradient(135deg, #E74C3C, #C0392B);
+        }
+
+        .toast-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .toast-message {
+            flex-grow: 1;
             font-weight: bold;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
         }
@@ -1130,6 +1802,9 @@
         <div class="shop-panel" id="shopPanel">
             <div class="shop-header">
                 <h2>🏪 Seed Shop</h2>
+                <div class="shop-timer" id="shopTimer">
+                    <span>Refreshes in: <span id="timerDisplay">3:00</span></span>
+                </div>
                 <button class="shop-close" id="shopClose">×</button>
             </div>
             <div class="shop-content">
@@ -1141,6 +1816,49 @@
         
         <!-- Shop Overlay -->
         <div class="shop-overlay" id="shopOverlay"></div>
+
+
+
+        <!-- Purchase Confirmation Modal -->
+        <div class="purchase-modal" id="purchaseModal">
+            <div class="purchase-modal-content">
+                <div class="purchase-header">
+                    <h3>🛒 Confirm Purchase</h3>
+                </div>
+                <div class="purchase-body">
+                    <div class="purchase-item-preview" id="purchaseItemPreview">
+                        <div class="purchase-item-icon" id="purchaseItemIcon"></div>
+                        <div class="purchase-item-details">
+                            <h4 id="purchaseItemName">Item Name</h4>
+                            <p class="purchase-item-rarity" id="purchaseItemRarity">Common</p>
+                            <p class="purchase-item-stock" id="purchaseItemStock">Stock: 3</p>
+                        </div>
+                    </div>
+                    <div class="purchase-price-section">
+                        <div class="purchase-price" id="purchasePrice">$1,000</div>
+                        <div class="purchase-balance">
+                            <span>Your Balance: </span>
+                            <span id="purchaseBalance">$5,000</span>
+                        </div>
+                        <div class="purchase-remaining" id="purchaseRemaining">
+                            <span>After Purchase: </span>
+                            <span id="purchaseRemainingAmount">$4,000</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="purchase-buttons">
+                    <button class="purchase-btn purchase-confirm" id="purchaseConfirm">
+                        <span class="purchase-btn-icon">💰</span>
+                        <span>Purchase</span>
+                    </button>
+                    <button class="purchase-btn purchase-cancel" id="purchaseCancel">
+                        <span class="purchase-btn-icon">❌</span>
+                        <span>Cancel</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="purchase-modal-overlay" id="purchaseModalOverlay"></div>
     </div>
 
     <script>
@@ -1150,18 +1868,29 @@
                 this.clouds = [];
                 this.pots = [];
                 this.gameState = null;
-                this.currentMoney = 1234;
+                this.currentMoney = 100; // Starting money - will be updated from API
                 this.plantData = this.initializePlantData();
                 this.modifierData = this.initializeModifierData();
-                this.playerInventory = [];
+                this.playerInventory = [
+                    { id: 1, name: 'Beanstalk', type: 'seed', rarity: 'common', quantity: 1, image: 'Assets/PlantSeeds/Beanstalkseeds.png' }
+                ];
                 this.isInventoryOpen = false;
                 this.isShopOpen = false;
                 this.shopInventory = [];
+                this.shopData = null; // Current shop data from API
+                this.shopTimer = null; // Shop refresh timer interval
                 this.isDragging = false;
                 this.draggedItem = null;
                 this.dragElement = null;
                 this.hoveredPot = null;
                 this.growingPlants = new Map(); // Track growing plants by pot index
+                this.seedTooltip = null; // For seed tooltips
+                this.pendingPurchase = null; // Track current purchase being considered
+                
+                // Audio system - always enabled
+                this.volume = 0.7;
+                this.sounds = {};
+                this.backgroundMusic = null;
                 this.init();
             }
 
@@ -1169,12 +1898,61 @@
                 this.setupEventListeners();
                 this.createPots();
                 this.startCloudAnimation();
-                this.startMoneyDemo();
+                this.initializeGameState();
+            }
+
+            // Initialize game state from API
+            async initializeGameState() {
+                try {
+                    const response = await fetch('/api/game-state');
+                    if (response.ok) {
+                        const gameState = await response.json();
+                        this.currentMoney = gameState.coins;
+                        this.updateMoneyDisplay();
+                        console.log('Game state initialized from API');
+                    }
+                } catch (error) {
+                    console.log('Could not load game state from API, using defaults:', error);
+                }
+                
+                // Start background shop refresh checking
+                this.startBackgroundShopRefresh();
+                
+                // Initialize audio system
+                this.initializeAudioSystem();
+            }
+
+            // Background shop refresh checking
+            startBackgroundShopRefresh() {
+                // Check for shop refreshes every 30 seconds
+                setInterval(async () => {
+                    try {
+                        const response = await fetch('/api/shop');
+                        if (response.ok) {
+                            const newShopData = await response.json();
+                            // If shop has refreshed and shop is currently open, update display
+                            if (this.isShopOpen && this.shopData && 
+                                newShopData.refresh_at !== this.shopData.refresh_at) {
+                                this.shopData = newShopData;
+                                this.populateShop();
+                                console.log('Shop refreshed automatically');
+                            } else if (!this.shopData) {
+                                this.shopData = newShopData;
+                            }
+                        }
+                    } catch (error) {
+                        console.log('Background shop refresh check failed:', error);
+                    }
+                }, 30000);
             }
 
             setupEventListeners() {
                 const startButton = document.getElementById('startButton');
-                startButton.addEventListener('click', () => this.startGame());
+                startButton.addEventListener('click', () => {
+                    // Start background music on user interaction (bypasses autoplay restrictions)
+                    this.startBackgroundMusic();
+                    this.startGame();
+                });
                 
                 const shopButton = document.getElementById('shopButton');
                 shopButton.addEventListener('click', () => this.onShopClick());
@@ -1197,6 +1975,18 @@
                 // Add global drag event listeners
                 document.addEventListener('mousemove', (e) => this.onMouseMove(e));
                 document.addEventListener('mouseup', (e) => this.onMouseUp(e));
+
+                // Purchase modal event listeners
+                const purchaseConfirm = document.getElementById('purchaseConfirm');
+                purchaseConfirm.addEventListener('click', () => this.confirmPurchase());
+                
+                const purchaseCancel = document.getElementById('purchaseCancel');
+                purchaseCancel.addEventListener('click', () => this.cancelPurchase());
+                
+                const purchaseModalOverlay = document.getElementById('purchaseModalOverlay');
+                purchaseModalOverlay.addEventListener('click', () => this.cancelPurchase());
+                
+
             }
 
             async startGame() {
@@ -1219,6 +2009,9 @@
                     
                     // Load initial game state
                     await this.loadGameState();
+                    
+                    // Start background music immediately after game starts
+                    this.startBackgroundMusic();
                 }
             }
 
@@ -1256,7 +2049,12 @@
                     const pot = document.createElement('div');
                     pot.className = 'pot';
                     pot.dataset.potIndex = i;
-                    pot.addEventListener('click', () => this.onPotClick(i));
+                    // Pot clicking disabled - only hover for growth info
+                    // pot.addEventListener('click', () => this.onPotClick(i));
+                    
+                    // Add hover listeners for growth progress display
+                    pot.addEventListener('mouseenter', () => this.onPotHover(i));
+                    pot.addEventListener('mouseleave', () => this.onPotHoverEnd(i));
                     
                     potsContainer.appendChild(pot);
                     this.pots.push({
@@ -1280,31 +2078,65 @@
                 });
             }
 
-            async onPotClick(index) {
-                console.log(`Pot ${index} clicked!`);
+            // Pot hover to show growth progress
+            onPotHover(index) {
                 const potData = this.pots[index];
                 
-                if (potData && potData.state === 'ready') {
-                    // Harvest the plant
-                    console.log(`Harvesting pot ${index}`);
-                    this.harvestPlant(index);
-                } else if (potData && potData.state === 'empty') {
-                    // Show shop to buy seeds
-                    console.log(`Pot ${index} is empty - show shop`);
-                    this.openShop();
-                } else if (potData && potData.state === 'growing') {
-                    // Show growth progress
+                if (potData && potData.state === 'growing') {
+                    // Show growth progress tooltip
                     const plantData = this.growingPlants.get(index);
                     if (plantData) {
                         const elapsed = Date.now() - plantData.startTime;
                         const progress = Math.min((elapsed / plantData.growthTime) * 100, 100);
-                        console.log(`Pot ${index} is growing... ${progress.toFixed(1)}% complete`);
-                        alert(`${plantData.seedName} is growing!\nProgress: ${progress.toFixed(1)}%`);
+                        this.showGrowthTooltip(index, plantData.seedName, progress);
                     }
                 }
+            }
+
+            onPotHoverEnd(index) {
+                // Hide any tooltips
+                this.hideGrowthTooltip();
+            }
+
+            showGrowthTooltip(potIndex, seedName, progress) {
+                // Remove any existing tooltip
+                this.hideGrowthTooltip();
                 
-                // Refresh game state
-                await this.loadGameState();
+                const pot = this.pots[potIndex].element;
+                const potRect = pot.getBoundingClientRect();
+                
+                const tooltip = document.createElement('div');
+                tooltip.id = 'growth-tooltip';
+                tooltip.className = 'growth-tooltip';
+                tooltip.innerHTML = `
+                    <div class="tooltip-header">${seedName}</div>
+                    <div class="tooltip-progress">Growth: ${progress.toFixed(1)}%</div>
+                    <div class="tooltip-bar">
+                        <div class="tooltip-fill" style="width: ${progress}%"></div>
+                    </div>
+                `;
+                
+                // Position tooltip above the pot
+                tooltip.style.position = 'fixed';
+                tooltip.style.left = (potRect.left + potRect.width / 2) + 'px';
+                tooltip.style.bottom = (window.innerHeight - potRect.top + 10) + 'px';
+                tooltip.style.transform = 'translateX(-50%)';
+                tooltip.style.zIndex = '1000';
+                
+                document.body.appendChild(tooltip);
+            }
+
+            hideGrowthTooltip() {
+                const existing = document.getElementById('growth-tooltip');
+                if (existing) {
+                    existing.remove();
+                }
+            }
+
+            // Legacy pot click function (disabled but kept for reference)
+            async onPotClick(index) {
+                // Pot clicking disabled - functionality moved to other interactions
+                console.log(`Pot clicking disabled for pot ${index}`);
             }
 
             startCloudAnimation() {
@@ -1408,27 +2240,7 @@
                 }
             }
 
-            startMoneyDemo() {
-                // Update money display initially
-                this.updateMoneyDisplay();
-                
-                // Start random money changes for demo
-                setInterval(() => {
-                    // Random change between -500 to +1000
-                    const change = Math.floor(Math.random() * 1500) - 500;
-                    this.currentMoney = Math.max(0, this.currentMoney + change);
-                    this.updateMoneyDisplay();
-                }, 2000); // Change every 2 seconds
 
-                // Occasional bigger changes
-                setInterval(() => {
-                    if (Math.random() > 0.7) { // 30% chance
-                        const bigChange = Math.floor(Math.random() * 5000) - 2000;
-                        this.currentMoney = Math.max(0, this.currentMoney + bigChange);
-                        this.updateMoneyDisplay();
-                    }
-                }, 5000); // Check every 5 seconds
-            }
 
             // Update money from game state (for later use)
             updateMoneyFromGameState() {
@@ -1452,18 +2264,94 @@
                 }
             }
 
-            openShop() {
+            async openShop() {
                 this.isShopOpen = true;
                 document.getElementById('shopPanel').classList.add('active');
                 document.getElementById('shopOverlay').classList.add('active');
+                await this.loadShopData();
                 this.populateShop();
+                this.startShopTimer();
                 console.log('Shop opened');
+            }
+
+            // API Functions
+            async loadShopData() {
+                try {
+                    const response = await fetch('/api/shop');
+                    if (response.ok) {
+                        this.shopData = await response.json();
+                        console.log('Shop data loaded:', this.shopData);
+                    } else {
+                        console.error('Failed to load shop data');
+                        // Fallback to create local shop inventory if API fails
+                        this.createShopInventory();
+                    }
+                } catch (error) {
+                    console.error('Error loading shop data:', error);
+                    this.createShopInventory();
+                }
+            }
+
+            startShopTimer() {
+                if (this.shopTimer) {
+                    clearInterval(this.shopTimer);
+                }
+                
+                this.shopTimer = setInterval(() => {
+                    this.updateShopTimer();
+                }, 1000);
+                
+                this.updateShopTimer(); // Update immediately
+            }
+
+            updateShopTimer() {
+                console.log('⏰ DEBUG: updateShopTimer called');
+                
+                if (!this.shopData || !this.shopData.refresh_at) {
+                    console.log('⏰ DEBUG: No shop data or refresh_at:', this.shopData);
+                    return;
+                }
+                
+                const now = Date.now() / 1000; // Current time in seconds
+                const timeUntilRefresh = Math.max(0, this.shopData.refresh_at - now);
+                
+                console.log(`⏰ DEBUG: Timer - now: ${now}, refresh_at: ${this.shopData.refresh_at}, timeLeft: ${timeUntilRefresh}`);
+                
+                if (timeUntilRefresh <= 0) {
+                    console.log('⏰ DEBUG: Timer expired, refreshing shop');
+                    // Shop should refresh
+                    this.loadShopData().then(() => {
+                        if (this.isShopOpen) {
+                            this.populateShop();
+                        }
+                    });
+                    return;
+                }
+                
+                const minutes = Math.floor(timeUntilRefresh / 60);
+                const seconds = Math.floor(timeUntilRefresh % 60);
+                const timerDisplay = document.getElementById('timerDisplay');
+                if (timerDisplay) {
+                    const timerText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    timerDisplay.textContent = timerText;
+                    console.log(`⏰ DEBUG: Timer display updated: ${timerText}`);
+                } else {
+                    console.log('⏰ DEBUG: Timer element not found');
+                }
             }
 
             closeShop() {
                 this.isShopOpen = false;
                 document.getElementById('shopPanel').classList.remove('active');
                 document.getElementById('shopOverlay').classList.remove('active');
+                this.hideSeedTooltip(); // Hide tooltip when closing shop
+                
+                // Clear the shop timer when closing
+                if (this.shopTimer) {
+                    clearInterval(this.shopTimer);
+                    this.shopTimer = null;
+                }
+                
                 console.log('Shop closed');
             }
 
@@ -1471,16 +2359,27 @@
                 const shopGrid = document.getElementById('shopGrid');
                 shopGrid.innerHTML = '';
 
-                // Initialize shop inventory if empty
-                if (this.shopInventory.length === 0) {
-                    this.createShopInventory();
-                }
+                console.log('Populating shop with shopData:', this.shopData);
 
-                // Populate the grid with shop items
-                this.shopInventory.forEach(item => {
-                    const itemElement = this.createShopItemElement(item);
-                    shopGrid.appendChild(itemElement);
-                });
+                if (this.shopData && this.shopData.slots) {
+                    // Use API data to populate shop
+                    console.log('Using API data, slots:', this.shopData.slots);
+                    this.shopData.slots.forEach((slot, index) => {
+                        console.log(`Creating shop item for slot ${index}:`, slot);
+                        const itemElement = this.createShopItemElement(slot, index);
+                        shopGrid.appendChild(itemElement);
+                    });
+                } else {
+                    console.log('Using fallback shop inventory');
+                    // Fallback to hardcoded inventory if no API data
+                    if (this.shopInventory.length === 0) {
+                        this.createShopInventory();
+                    }
+                    this.shopInventory.forEach(item => {
+                        const itemElement = this.createShopItemElement(item);
+                        shopGrid.appendChild(itemElement);
+                    });
+                }
             }
 
             createShopInventory() {
@@ -1509,45 +2408,179 @@
                 ];
             }
 
-            createShopItemElement(item) {
+            createShopItemElement(item, slotIndex = null) {
                 const itemDiv = document.createElement('div');
-                const canAfford = this.currentMoney >= item.price;
-                const availabilityClass = item.available && canAfford ? 'available' : 'unavailable';
                 
-                itemDiv.className = `shop-item ${availabilityClass} rarity-${item.rarity}`;
-                itemDiv.onclick = () => this.onShopItemClick(item);
+                console.log('Creating shop item element for:', item, 'slotIndex:', slotIndex);
+                
+                // Handle both API format (slot) and legacy format (item)
+                const isApiFormat = item.species_id !== undefined;
+                const name = isApiFormat ? item.species_name : item.name;
+                const price = isApiFormat ? item.price : item.price;
+                const rarity = isApiFormat ? item.rarity : item.rarity;
+                const stock = isApiFormat ? item.stock : null;
+                const available = isApiFormat ? (item.stock > 0) : item.available;
+                const image = isApiFormat ? this.getSeedImageForSpecies(item.species_id) : item.image;
+                
+                console.log(`Item details - name: ${name}, price: ${price}, stock: ${stock}, available: ${available}`);
+                
+                const canAfford = this.currentMoney >= price;
+                const availabilityClass = available && canAfford ? 'available' : 'unavailable';
+                
+                itemDiv.className = `shop-item ${availabilityClass} rarity-${rarity}`;
+                itemDiv.onclick = () => this.onShopItemClick(isApiFormat ? { ...item, slotIndex } : item);
 
-                const priceContent = item.available && canAfford 
-                    ? `<div class="shop-item-price">$${item.price.toLocaleString()}</div>`
-                    : `<div class="shop-item-unavailable">${!canAfford ? 'Too Expensive!' : 'Unavailable'}</div>`;
+                // Always show price
+                const priceContent = `<div class="shop-item-price">$${price.toLocaleString()}</div>`;
+                
+                // Show availability status if there's an issue
+                const statusContent = (!available || !canAfford) ? 
+                    `<div class="shop-item-status ${!available ? 'out-of-stock' : 'too-expensive'}">${!canAfford ? 'TOO EXPENSIVE!' : stock === 0 ? 'OUT OF STOCK!' : 'UNAVAILABLE'}</div>` : '';
+
+                // Stock display for API format - lowered threshold for low stock warning
+                const stockContent = isApiFormat ? 
+                    `<div class="shop-item-stock ${stock <= 1 ? 'low-stock' : ''}">Stock: ${stock}</div>` : '';
 
                 itemDiv.innerHTML = `
-                    <div class="shop-item-icon" style="background-image: url('${item.image}')"></div>
+                    <div class="shop-item-icon" style="background-image: url('${image}')"></div>
+                    <h3 style="color: white; font-size: 14px; margin: 5px 0; text-align: center;">${name}</h3>
                     ${priceContent}
+                    ${statusContent}
+                    ${stockContent}
                 `;
 
                 return itemDiv;
             }
 
+            // Map species IDs to seed images
+            getSeedImageForSpecies(speciesId) {
+                const seedImageMap = {
+                    'beanstalk': 'Assets/PlantSeeds/Beanstalkseeds.png',
+                    'snap_pea': 'Assets/PlantSeeds/SnappeaSeeds.png',
+                    'jellybean_vine': 'Assets/PlantSeeds/jellybeanvineseeds.png',
+                    'bamboo_bean': 'Assets/PlantSeeds/Bamboobeanseeds.png',
+                    'coffee_beanstalk': 'Assets/PlantSeeds/coffeebeanstalkseeds.png',
+                    'thunder_pod': 'Assets/PlantSeeds/thunderpodseeds.png',
+                    'frost_pea': 'Assets/PlantSeeds/frostpeaseeds.png',
+                    'choco_vine': 'Assets/PlantSeeds/Chocovineseeds.png',
+                    'ironvine': 'Assets/PlantSeeds/Ironvineseeds.png',
+                    'honeyvine': 'Assets/PlantSeeds/Honeyvineseeds.png',
+                    'sunbean': 'Assets/PlantSeeds/Sunbeanseeds.png',
+                    'moonbean': 'Assets/PlantSeeds/Moonbeanseeds.png',
+                    'cloud_creeper': 'Assets/PlantSeeds/Cloudcreeperseeds.png',
+                    'royal_stalk': 'Assets/PlantSeeds/Royalstalkseeds.png',
+                    'crystal_bean': 'Assets/PlantSeeds/CrystalBeanseeds.png',
+                    'neon_soy': 'Assets/PlantSeeds/Neonsoyseeds.png',
+                    'vinecorn': 'Assets/PlantSeeds/Vinecornseeds.png',
+                    'fire_pod': 'Assets/PlantSeeds/Firepodseeds.png',
+                    'shadow_bean': 'Assets/PlantSeeds/Shadowbeanseeds.png',
+                    'prism_stalk': 'Assets/PlantSeeds/Prismstalkseeds.png'
+                };
+                return seedImageMap[speciesId] || 'Assets/PlantSeeds/Beanstalkseeds.png'; // Fallback
+            }
+
             onShopItemClick(item) {
                 console.log('Shop item clicked:', item);
                 
-                if (!item.available) {
-                    alert('This item is currently unavailable!');
+                // Handle both API format (has slotIndex) and legacy format
+                const isApiFormat = item.slotIndex !== undefined;
+                const name = isApiFormat ? item.species_name : item.name;
+                const price = item.price;
+                const available = isApiFormat ? (item.stock > 0) : item.available;
+                
+                if (!available) {
+                    // Item is unavailable, but still show modal so they can see the price
+                    this.showPurchaseModal(item);
                     return;
                 }
                 
-                if (this.currentMoney < item.price) {
-                    alert(`Not enough money!\n\nYou need $${item.price.toLocaleString()} but only have $${this.currentMoney.toLocaleString()}`);
+                // Show purchase modal even if can't afford - let them see the price
+                this.showPurchaseModal(item);
+            }
+
+            showPurchaseModal(item) {
+                // Handle both API format and legacy format
+                const isApiFormat = item.slotIndex !== undefined;
+                const name = isApiFormat ? item.species_name : item.name;
+                const price = item.price;
+                const rarity = isApiFormat ? item.rarity : item.rarity;
+                const stock = isApiFormat ? item.stock : null;
+                const image = isApiFormat ? this.getSeedImageForSpecies(item.species_id) : item.image;
+                const available = isApiFormat ? (item.stock > 0) : item.available;
+                
+                // Store the pending purchase
+                this.pendingPurchase = {
+                    item,
+                    isApiFormat,
+                    name,
+                    price,
+                    available,
+                    canAfford: this.currentMoney >= price
+                };
+                
+                // Populate modal content
+                document.getElementById('purchaseItemIcon').style.backgroundImage = `url('${image}')`;
+                document.getElementById('purchaseItemName').textContent = name;
+                
+                const rarityElement = document.getElementById('purchaseItemRarity');
+                rarityElement.textContent = rarity.charAt(0).toUpperCase() + rarity.slice(1).replace('_', '-');
+                rarityElement.className = `purchase-item-rarity ${rarity}`;
+                
+                document.getElementById('purchaseItemStock').textContent = stock ? `Stock: ${stock}` : '';
+                document.getElementById('purchasePrice').textContent = `$${price.toLocaleString()}`;
+                document.getElementById('purchaseBalance').textContent = `$${this.currentMoney.toLocaleString()}`;
+                
+                const remainingAmount = this.currentMoney - price;
+                const remainingElement = document.getElementById('purchaseRemainingAmount');
+                remainingElement.textContent = `$${remainingAmount.toLocaleString()}`;
+                remainingElement.className = remainingAmount < 0 ? 'negative' : '';
+                
+                // Update confirm button based on affordability and availability
+                const confirmButton = document.getElementById('purchaseConfirm');
+                if (!available) {
+                    confirmButton.textContent = 'Out of Stock';
+                    confirmButton.disabled = true;
+                    confirmButton.style.opacity = '0.5';
+                } else if (!this.pendingPurchase.canAfford) {
+                    confirmButton.innerHTML = '<span class="purchase-btn-icon">💸</span><span>Can\'t Afford</span>';
+                    confirmButton.disabled = true;
+                    confirmButton.style.opacity = '0.5';
+                } else {
+                    confirmButton.innerHTML = '<span class="purchase-btn-icon">💰</span><span>Purchase</span>';
+                    confirmButton.disabled = false;
+                    confirmButton.style.opacity = '1';
+                }
+                
+                // Show modal
+                document.getElementById('purchaseModal').classList.add('active');
+                document.getElementById('purchaseModalOverlay').classList.add('active');
+            }
+
+            cancelPurchase() {
+                // Hide modal
+                document.getElementById('purchaseModal').classList.remove('active');
+                document.getElementById('purchaseModalOverlay').classList.remove('active');
+                
+                // Clear pending purchase
+                this.pendingPurchase = null;
+            }
+
+            async confirmPurchase() {
+                if (!this.pendingPurchase || !this.pendingPurchase.canAfford || !this.pendingPurchase.available) {
                     return;
                 }
                 
-                // Confirm purchase
-                const confirmPurchase = confirm(`Purchase ${item.name} for $${item.price.toLocaleString()}?`);
+                console.log('Confirming purchase for:', this.pendingPurchase);
                 
-                if (confirmPurchase) {
-                    this.purchaseItem(item);
+                // Process the purchase
+                if (this.pendingPurchase.isApiFormat) {
+                    await this.purchaseItemFromAPI(this.pendingPurchase.item);
+                } else {
+                    this.purchaseItem(this.pendingPurchase.item);
                 }
+                
+                // Hide modal after purchase
+                this.cancelPurchase();
             }
 
             purchaseItem(item) {
@@ -1573,8 +2606,114 @@
                 // Update shop display to reflect affordability changes
                 this.populateShop();
                 
+                // Update inventory display if it's open
+                if (this.isInventoryOpen) {
+                    this.populateInventory();
+                }
+                
                 console.log(`Purchased ${item.name} for $${item.price}`);
-                alert(`Successfully purchased ${item.name}!\n\nCheck your inventory to see your new seed.`);
+                this.showSuccessMessage(`Successfully purchased ${item.name}! Check your inventory.`);
+            }
+
+            async purchaseItemFromAPI(item) {
+                try {
+                    const response = await fetch('/api/buy-seed', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            slot_index: item.slotIndex,
+                            pot_index: -1 // -1 means add to inventory instead of planting directly
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    console.log('🔍 DEBUG: API Response:', result);
+                    console.log('🔍 DEBUG: Response success:', result.success);
+                    console.log('🔍 DEBUG: Response coins:', result.coins);
+                    
+                    if (result.success) {
+                        console.log(`Successfully purchased ${item.species_name}!`);
+                        console.log('Purchase result:', result);
+                        
+                        // Update local money from server response
+                        this.currentMoney = result.coins;
+                        this.updateMoneyDisplay();
+                        
+                        // Add to inventory
+                        const existingItem = this.playerInventory.find(invItem => invItem.name === item.species_name);
+                        if (existingItem) {
+                            existingItem.quantity += 1;
+                            console.log(`Updated existing item: ${item.species_name}, new quantity: ${existingItem.quantity}`);
+                        } else {
+                            const newItem = {
+                                id: Date.now(),
+                                name: item.species_name,
+                                type: 'seed',
+                                rarity: item.rarity,
+                                quantity: 1,
+                                image: this.getSeedImageForSpecies(item.species_id)
+                            };
+                            this.playerInventory.push(newItem);
+                            console.log(`Added new item to inventory:`, newItem);
+                        }
+                        
+                        // Use the shop data returned from the purchase instead of making another API call
+                        if (result.shop) {
+                            this.shopData = result.shop;
+                            console.log('Updated shop data from purchase response:', this.shopData);
+                        }
+                        this.populateShop();
+                        
+                        // Update inventory display if it's open
+                        if (this.isInventoryOpen) {
+                            this.populateInventory();
+                        }
+                        
+                        console.log('Current inventory after purchase:', this.playerInventory);
+                        this.showSuccessMessage(`Successfully purchased ${item.species_name}! Check your inventory.`);
+                    } else {
+                        this.showErrorMessage('Purchase failed. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Error purchasing item:', error);
+                    this.showErrorMessage('Purchase failed. Please check your connection and try again.');
+                }
+            }
+
+            // Notification system
+            showSuccessMessage(message) {
+                console.log('SUCCESS:', message);
+                this.showToast(message, 'success');
+            }
+
+            showErrorMessage(message) {
+                console.error('ERROR:', message);
+                this.showToast(message, 'error');
+            }
+
+            showToast(message, type = 'info') {
+                // Create toast element
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                toast.innerHTML = `
+                    <div class="toast-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</div>
+                    <div class="toast-message">${message}</div>
+                `;
+
+                // Add to page
+                document.body.appendChild(toast);
+
+                // Animate in
+                setTimeout(() => toast.classList.add('show'), 100);
+
+                // Remove after delay
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
             }
 
             // Inventory functionality
@@ -1603,6 +2742,7 @@
                 this.isInventoryOpen = false;
                 document.getElementById('inventoryPanel').classList.remove('active');
                 document.getElementById('inventoryOverlay').classList.remove('active');
+                this.hideSeedTooltip(); // Hide tooltip when closing inventory
                 console.log('Inventory closed');
             }
 
@@ -1610,13 +2750,13 @@
                 const inventoryGrid = document.getElementById('inventoryGrid');
                 inventoryGrid.innerHTML = '';
 
-                // Add some starter inventory data if empty (for demo purposes)
-                if (this.playerInventory.length === 0) {
-                    this.createDummyInventoryData();
-                }
+                // No longer using dummy data - player starts with one beanstalk seed
+
+                console.log('Populating inventory with playerInventory:', this.playerInventory);
 
                 // Populate the grid with inventory items
                 if (this.playerInventory.length === 0) {
+                    console.log('Inventory is empty, showing empty message');
                     // Show empty inventory message
                     const emptyMessage = document.createElement('div');
                     emptyMessage.className = 'inventory-empty';
@@ -1627,31 +2767,17 @@
                     `;
                     inventoryGrid.appendChild(emptyMessage);
                 } else {
+                    console.log(`Showing ${this.playerInventory.length} inventory items`);
                     // Show inventory items
-                    this.playerInventory.forEach(item => {
+                    this.playerInventory.forEach((item, index) => {
+                        console.log(`Creating inventory item ${index}:`, item);
                         const itemElement = this.createInventoryItemElement(item);
                         inventoryGrid.appendChild(itemElement);
                     });
                 }
             }
 
-            createDummyInventoryData() {
-                // Add some demo seed data with actual images
-                this.playerInventory = [
-                    { id: 1, name: 'Beanstalk', type: 'seed', rarity: 'common', quantity: 5, image: 'Assets/PlantSeeds/Beanstalkseeds.png' },
-                    { id: 2, name: 'Snap Pea', type: 'seed', rarity: 'common', quantity: 3, image: 'Assets/PlantSeeds/SnappeaSeeds.png' },
-                    { id: 3, name: 'Thunder Pod', type: 'seed', rarity: 'uncommon', quantity: 2, image: 'Assets/PlantSeeds/thunderpodseeds.png' },
-                    { id: 4, name: 'Moonbean', type: 'seed', rarity: 'uncommon', quantity: 1, image: 'Assets/PlantSeeds/Moonbeanseeds.png' },
-                    { id: 5, name: 'Crystal Bean', type: 'seed', rarity: 'rare', quantity: 1, image: 'Assets/PlantSeeds/CrystalBeanseeds.png' },
-                    { id: 6, name: 'Fire Pod', type: 'seed', rarity: 'rare', quantity: 1, image: 'Assets/PlantSeeds/Firepodseeds.png' },
-                    { id: 7, name: 'Jellybean Vine', type: 'seed', rarity: 'common', quantity: 8, image: 'Assets/PlantSeeds/jellybeanvineseeds.png' },
-                    { id: 8, name: 'Coffee Creeper', type: 'seed', rarity: 'common', quantity: 4, image: 'Assets/PlantSeeds/coffeebeanstalkseeds.png' },
-                    { id: 9, name: 'Royal Stalk', type: 'seed', rarity: 'legendary', quantity: 1, image: 'Assets/PlantSeeds/Royalstalkseeds.png' },
-                    { id: 10, name: 'Bamboo Bean', type: 'seed', rarity: 'common', quantity: 6, image: 'Assets/PlantSeeds/Bamboobeanseeds.png' },
-                    { id: 11, name: 'Choco Vine', type: 'seed', rarity: 'uncommon', quantity: 2, image: 'Assets/PlantSeeds/Chocovineseeds.png' },
-                    { id: 12, name: 'Cloud Creeper', type: 'seed', rarity: 'uncommon', quantity: 3, image: 'Assets/PlantSeeds/Cloudcreeperseeds.png' },
-                ];
-            }
+
 
             createInventoryItemElement(item) {
                 const itemDiv = document.createElement('div');
@@ -1668,6 +2794,18 @@
                         this.onInventoryItemClick(item);
                     }
                 };
+
+                // Add tooltip functionality
+                itemDiv.addEventListener('mouseenter', (e) => {
+                    if (!this.isDragging) {
+                        const rect = itemDiv.getBoundingClientRect();
+                        this.showSeedTooltip(item, rect.right + 10, rect.top + rect.height / 2);
+                    }
+                });
+
+                itemDiv.addEventListener('mouseleave', () => {
+                    this.hideSeedTooltip();
+                });
 
                 // Use image if available, fallback to icon
                 const iconContent = item.image 
@@ -1698,6 +2836,9 @@
                 
                 this.isDragging = true;
                 this.draggedItem = { ...item }; // Clone the item
+                
+                // Hide tooltip immediately when dragging starts
+                this.hideSeedTooltip();
                 
                 // Add dragging class to source element
                 sourceElement.classList.add('dragging');
@@ -2112,8 +3253,8 @@
                 return beanMapping[plantName] || 'Assets/BasicBeans/Jellybean.png'; // Default fallback
             }
 
-            // Bean value mapping based on plant types
-            getBeanValueForPlant(plantName) {
+            // Bean value mapping based on plant types with rarity multipliers
+            getBeanValueForPlant(plantName, rarity = 'none') {
                 const beanValues = {
                     'Beanstalk': () => 12 + Math.floor(Math.random() * 5), // 12-16 random
                     'Snap Pea': 90,
@@ -2137,8 +3278,226 @@
                     'Prism Stalk': 340000
                 };
                 
-                const value = beanValues[plantName];
-                return typeof value === 'function' ? value() : (value || 10); // Default 10 if not found
+                let baseValue = beanValues[plantName];
+                if (typeof baseValue === 'function') {
+                    baseValue = baseValue();
+                } else if (!baseValue) {
+                    baseValue = 10;
+                }
+                
+                // Apply rarity multipliers
+                let multiplier = 1.0;
+                if (rarity === 'shiny') {
+                    multiplier = 3.0; // 200% more valuable (3x multiplier)
+                } else if (rarity === 'golden') {
+                    multiplier = 6.0; // 500% more valuable (6x multiplier)
+                }
+                
+                const finalValue = Math.floor(baseValue * multiplier);
+                
+                // Log special beans for excitement!
+                if (rarity !== 'none') {
+                    const rarityName = rarity === 'shiny' ? 'SILVER SHINY' : 'GOLDEN';
+                    console.log(`✨ ${rarityName} BEAN! ${plantName} worth ${finalValue} coins (${multiplier}x multiplier!)`);
+                }
+                
+                return finalValue;
+            }
+
+            // Get detailed seed information for tooltips
+            getSeedInfo(seedName) {
+                const seedData = {
+                    'Beanstalk': { 
+                        growthTime: 25, type: 'Picker', rarity: 'common', 
+                        sellValue: '12-16', cost: 120, 
+                        description: 'A humble beginning to your farming empire.' 
+                    },
+                    'Snap Pea': { 
+                        growthTime: 75, type: 'Picker', rarity: 'common', 
+                        sellValue: '90', cost: 560, 
+                        description: 'Quick to grow, satisfying to harvest.' 
+                    },
+                    'Jellybean Vine': { 
+                        growthTime: 90, type: 'Picker', rarity: 'uncommon', 
+                        sellValue: '170', cost: 1285, 
+                        description: 'Sweet rewards for patient gardeners.' 
+                    },
+                    'Bamboo Bean': { 
+                        growthTime: 120, type: 'Cutter', rarity: 'uncommon', 
+                        sellValue: '300', cost: 5410, 
+                        description: 'Strong and resilient, like bamboo itself.' 
+                    },
+                    'Coffee Creeper': { 
+                        growthTime: 120, type: 'Picker', rarity: 'uncommon', 
+                        sellValue: '540', cost: 9300, 
+                        description: 'Energizing profits from caffeine-rich beans.' 
+                    },
+                    'Thunder Pod': { 
+                        growthTime: 150, type: 'Cutter', rarity: 'rare', 
+                        sellValue: '970', cost: 17000, 
+                        description: 'Electrifying yields that strike like lightning.' 
+                    },
+                    'Frost Pea': { 
+                        growthTime: 150, type: 'Picker', rarity: 'rare', 
+                        sellValue: '2,700', cost: 31000, 
+                        description: 'Cool profits from icy cold harvests.' 
+                    },
+                    'Choco Vine': { 
+                        growthTime: 180, type: 'Picker', rarity: 'rare', 
+                        sellValue: '3,500', cost: 35200, 
+                        description: 'Sweet as chocolate, rich as gold.' 
+                    },
+                    'Iron Vine': { 
+                        growthTime: 210, type: 'Cutter', rarity: 'legendary', 
+                        sellValue: '15,300', cost: 90000, 
+                        description: 'Forged in nature, stronger than steel.' 
+                    },
+                    'Honey Vine': { 
+                        growthTime: 180, type: 'Picker', rarity: 'legendary', 
+                        sellValue: '19,300', cost: 180000, 
+                        description: 'Golden nectar flows from these vines.' 
+                    },
+                    'Sunbean': { 
+                        growthTime: 240, type: 'Picker', rarity: 'legendary', 
+                        sellValue: '25,500', cost: 193000, 
+                        description: 'Harness the power of the sun itself.' 
+                    },
+                    'Moonbean': { 
+                        growthTime: 240, type: 'Picker', rarity: 'mythical', 
+                        sellValue: '43,000', cost: 253000, 
+                        description: 'Mystical beans blessed by lunar energy.' 
+                    },
+                    'Cloud Creeper': { 
+                        growthTime: 270, type: 'Picker', rarity: 'mythical', 
+                        sellValue: '49,000', cost: 295000, 
+                        description: 'Floating profits from sky-high yields.' 
+                    },
+                    'Royal Stalk': { 
+                        growthTime: 300, type: 'Cutter', rarity: 'ultra-mythical', 
+                        sellValue: '86,000', cost: 465000, 
+                        description: 'Fit for kings, priced for emperors.' 
+                    },
+                    'Crystal Bean': { 
+                        growthTime: 300, type: 'Picker', rarity: 'ultra-mythical', 
+                        sellValue: '120,000', cost: 600000, 
+                        description: 'Crystalline perfection in bean form.' 
+                    },
+                    'Neon Soy': { 
+                        growthTime: 330, type: 'Cutter', rarity: 'ultra-mythical', 
+                        sellValue: '160,000', cost: 570000, 
+                        description: 'Glowing with otherworldly profits.' 
+                    },
+                    'Vinecorn': { 
+                        growthTime: 240, type: 'Cutter', rarity: 'godly', 
+                        sellValue: '210,000', cost: 1200000, 
+                        description: 'Divine fusion of vine and grain.' 
+                    },
+                    'Fire Pod': { 
+                        growthTime: 360, type: 'Cutter', rarity: 'godly', 
+                        sellValue: '280,000', cost: 1800000, 
+                        description: 'Burning bright with eternal flame.' 
+                    },
+                    'Shadow Bean': { 
+                        growthTime: 300, type: 'Picker', rarity: 'godly', 
+                        sellValue: '320,000', cost: 3182000, 
+                        description: 'Dark power yields illuminating profits.' 
+                    },
+                    'Prism Stalk': { 
+                        growthTime: 480, type: 'Picker', rarity: 'godly', 
+                        sellValue: '340,000', cost: 5620000, 
+                        description: 'Refracts light into pure prosperity.' 
+                    }
+                };
+                
+                return seedData[seedName] || {
+                    growthTime: 60, type: 'Unknown', rarity: 'common', 
+                    sellValue: '?', cost: 0, description: 'Mystery seed with unknown properties.'
+                };
+            }
+
+            // Create and show seed tooltip
+            createSeedTooltip() {
+                if (this.seedTooltip) return;
+                
+                this.seedTooltip = document.createElement('div');
+                this.seedTooltip.className = 'seed-tooltip';
+                document.body.appendChild(this.seedTooltip);
+            }
+
+            // Show seed tooltip with information
+            showSeedTooltip(seedItem, anchorX, anchorY) {
+                if (!this.seedTooltip) this.createSeedTooltip();
+                
+                const seedInfo = this.getSeedInfo(seedItem.name);
+                
+                this.seedTooltip.innerHTML = `
+                    <div class="tooltip-header">
+                        <div class="tooltip-icon" style="background-image: url('${seedItem.image}')"></div>
+                        <div class="tooltip-title">
+                            <h3 class="tooltip-name">${seedItem.name}</h3>
+                            <p class="tooltip-rarity ${seedInfo.rarity}">${seedInfo.rarity}</p>
+                        </div>
+                    </div>
+                    <div class="tooltip-stats">
+                        <div class="tooltip-stat">
+                            <span class="stat-icon">⏰</span>
+                            <span>${seedInfo.growthTime}s</span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span class="stat-icon">💰</span>
+                            <span>$${seedInfo.sellValue}</span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span class="stat-icon">${seedInfo.type === 'Picker' ? '✋' : '✂️'}</span>
+                            <span>${seedInfo.type}</span>
+                        </div>
+                        <div class="tooltip-stat">
+                            <span class="stat-icon">📦</span>
+                            <span>×${seedItem.quantity}</span>
+                        </div>
+                    </div>
+                    <div class="tooltip-description">${seedInfo.description}</div>
+                `;
+                
+                // Show tooltip first to get accurate dimensions
+                this.seedTooltip.style.visibility = 'hidden';
+                this.seedTooltip.classList.add('visible');
+                
+                // Now get accurate dimensions for positioning
+                const tooltipRect = this.seedTooltip.getBoundingClientRect();
+                const screenWidth = window.innerWidth;
+                const screenHeight = window.innerHeight;
+                
+                // Start with tooltip to the right of the anchor point
+                let tooltipX = anchorX;
+                let tooltipY = anchorY - (tooltipRect.height / 2); // Center vertically on the item
+                
+                // If tooltip goes off the right edge, show it on the left side
+                if (tooltipX + tooltipRect.width > screenWidth - 20) {
+                    tooltipX = anchorX - tooltipRect.width - 20;
+                }
+                
+                // If tooltip goes off the bottom, push it up
+                if (tooltipY + tooltipRect.height > screenHeight - 20) {
+                    tooltipY = screenHeight - tooltipRect.height - 20;
+                }
+                
+                // If tooltip goes off the top, push it down
+                if (tooltipY < 20) {
+                    tooltipY = 20;
+                }
+                
+                // Apply final position and make visible
+                this.seedTooltip.style.left = tooltipX + 'px';
+                this.seedTooltip.style.top = tooltipY + 'px';
+                this.seedTooltip.style.visibility = 'visible';
+            }
+
+            // Hide seed tooltip
+            hideSeedTooltip() {
+                if (this.seedTooltip) {
+                    this.seedTooltip.classList.remove('visible');
+                }
             }
 
             // Spawn beans around a grown beanstalk
@@ -2302,9 +3661,18 @@
                 // Random animation delay
                 const randomDelay = Math.random() * 1.5; // 0-1.5s delay
                 
+                // Generate bean rarity - 3% silver shiny, 3% golden
+                const rarityRoll = Math.random();
+                let beanRarity = 'none';
+                if (rarityRoll < 0.03) {
+                    beanRarity = 'shiny'; // Silver shiny - 3% chance, 200% more valuable
+                } else if (rarityRoll < 0.06) {
+                    beanRarity = 'golden'; // Golden - 3% chance, 500% more valuable  
+                }
+                
                 // Create bean element
                 const bean = document.createElement('div');
-                bean.className = 'vine-bean';
+                bean.className = `vine-bean ${beanRarity !== 'none' ? 'rarity-' + beanRarity : ''}`;
                 bean.style.backgroundImage = `url('${beanImage}')`;
                 bean.style.left = (vineX + randomX) + 'px';
                 bean.style.top = (vineY + randomY) + 'px';
@@ -2312,6 +3680,7 @@
                 bean.dataset.potIndex = potIndex;
                 bean.dataset.beanIndex = beanIndex;
                 bean.dataset.plantName = plantName; // Store plant name for value calculation
+                bean.dataset.rarity = beanRarity; // Store rarity for value calculation
                 
                 // Store the final transform values as CSS variables for the animation
                 bean.style.setProperty('--final-scale', randomScale);
@@ -2368,11 +3737,17 @@
                 
                 console.log('💰 DEBUG: Collecting bean from', plantName);
                 
-                // Get bean value
-                const beanValue = this.getBeanValueForPlant(plantName);
+                // Get bean value with rarity multiplier
+                const beanRarity = beanElement.dataset.rarity || 'none';
+                const beanValue = this.getBeanValueForPlant(plantName, beanRarity);
                 
                 // IMMEDIATE SATISFYING CLICK EFFECTS! ✨
                 this.playClickEffects(beanElement);
+                
+                // Play bean collection sound - alternate between two sounds for variety
+                const beanSounds = ['collectbean', 'collectbean2'];
+                const randomSound = beanSounds[Math.floor(Math.random() * beanSounds.length)];
+                this.playSound(randomSound);
                 
                 // Mark bean as flying to prevent multiple clicks
                 beanElement.classList.add('flying-to-money');
@@ -2437,7 +3812,7 @@
                 const endX = moneyRect.left + moneyRect.width / 2;
                 const endY = moneyRect.top + moneyRect.height / 2;
                 
-                // Create a clone for the animation (so original stays in place briefly)
+                // Create a clone for the animation
                 const flyingBean = beanElement.cloneNode(true);
                 flyingBean.style.position = 'fixed';
                 flyingBean.style.left = startX + 'px';
@@ -2445,24 +3820,25 @@
                 flyingBean.style.zIndex = '100';
                 flyingBean.style.pointerEvents = 'none';
                 flyingBean.classList.add('flying-to-money');
+                flyingBean.style.width = '40px';
+                flyingBean.style.height = '40px';
                 
                 document.body.appendChild(flyingBean);
                 
+                // REMOVE THE ORIGINAL BEAN IMMEDIATELY when flight starts!
+                beanElement.remove();
+                
                 console.log(`✈️ DEBUG: Flying bean from (${Math.round(startX)}, ${Math.round(startY)}) to (${Math.round(endX)}, ${Math.round(endY)})`);
                 
-                // Calculate flight duration based on distance (more distance = longer flight)
+                // Calculate flight duration based on distance (longer for dramatic effect)
                 const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
-                const duration = Math.min(Math.max(distance / 500, 0.8), 2.0); // 0.8-2.0 seconds
+                const duration = Math.min(Math.max(distance / 300, 1.2), 2.5); // 1.2-2.5 seconds (longer)
                 
                 // Apply the flying animation with calculated duration
                 flyingBean.style.animation = `beanFlyToMoney ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`;
                 
-                // Animate the position using CSS transitions for smooth curved path
-                setTimeout(() => {
-                    flyingBean.style.transition = `all ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
-                    flyingBean.style.left = endX + 'px';
-                    flyingBean.style.top = endY + 'px';
-                }, 10);
+                // Create beautiful curved path animation
+                this.animateAlongCurvedPath(flyingBean, startX, startY, endX, endY, duration);
                 
                 // Add money and effects when bean reaches destination
                 setTimeout(() => {
@@ -2475,13 +3851,10 @@
                     // Remove the flying bean
                     flyingBean.remove();
                     
-                    // Remove the original bean
-                    beanElement.remove();
-                    
                     console.log(`💰 DEBUG: Bean collected! Added $${beanValue.toLocaleString()}`);
                     
                     // Trigger immediate check for spawning replacement bean (after a short delay)
-                    const potIndex = parseInt(beanElement.dataset.potIndex);
+                    const potIndex = parseInt(flyingBean.dataset.potIndex); // Use flyingBean since original is gone
                     if (!isNaN(potIndex)) {
                         setTimeout(() => {
                             this.checkAndSpawnBeans(potIndex);
@@ -2491,10 +3864,117 @@
                 }, duration * 1000);
             }
 
+            // Animate bean along a beautiful curved path across the screen
+            animateAlongCurvedPath(beanElement, startX, startY, endX, endY, duration) {
+                // Calculate control points for a dramatic arc
+                const midX = (startX + endX) / 2;
+                const midY = Math.min(startY, endY) - 150 - Math.random() * 50; // Higher arc (150-200px up)
+                
+                // Use requestAnimationFrame for smooth animation
+                const startTime = performance.now();
+                
+                const animateStep = (currentTime) => {
+                    const elapsed = currentTime - startTime;
+                    let progress = Math.min(elapsed / (duration * 1000), 1);
+                    
+                    // Apply easing for more satisfying movement (ease-in-out-back)
+                    progress = progress < 0.5 
+                        ? 2 * progress * progress 
+                        : -1 + (4 - 2 * progress) * progress;
+                    
+                    // Quadratic Bézier curve calculation
+                    const t = progress;
+                    const x = Math.pow(1 - t, 2) * startX + 2 * (1 - t) * t * midX + Math.pow(t, 2) * endX;
+                    const y = Math.pow(1 - t, 2) * startY + 2 * (1 - t) * t * midY + Math.pow(t, 2) * endY;
+                    
+                    // Add slight wobble for more organic movement
+                    const wobbleX = 5 * Math.sin(progress * Math.PI * 8) * (1 - progress);
+                    const wobbleY = 3 * Math.cos(progress * Math.PI * 12) * (1 - progress);
+                    
+                    // Update position with wobble
+                    beanElement.style.left = (x + wobbleX) + 'px';
+                    beanElement.style.top = (y + wobbleY) + 'px';
+                    
+                    // Scale the bean slightly during flight for depth effect
+                    const scale = 1.2 + (0.3 * Math.sin(progress * Math.PI));
+                    beanElement.style.transform = `scale(${scale}) rotate(${progress * 720}deg)`;
+                    
+                    // Add subtle opacity pulsing
+                    beanElement.style.opacity = 0.95 + (0.05 * Math.sin(progress * Math.PI * 4));
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animateStep);
+                    } else {
+                        // Ensure final position is exact
+                        beanElement.style.left = endX + 'px';
+                        beanElement.style.top = endY + 'px';
+                    }
+                };
+                
+                requestAnimationFrame(animateStep);
+            }
+
             // Add money to player's total
             addMoney(amount) {
                 this.currentMoney += amount;
                 this.updateMoneyDisplay();
+                
+                // Play coin sound effect
+                this.playSound('coin');
+            }
+
+            // ===== AUDIO SYSTEM =====
+            
+            initializeAudioSystem() {
+                console.log('🎵 Initializing audio system...');
+                
+                // Preload background music
+                this.backgroundMusic = new Audio('Sound/backgroundmusic1.mp3');
+                this.backgroundMusic.loop = true;
+                this.backgroundMusic.volume = 0.4; // Background music quieter
+                
+                // Preload sound effects
+                this.sounds = {
+                    coin: new Audio('Sound/coin.mp3'),
+                    collectbean: new Audio('Sound/collectbean.mp3'),
+                    collectbean2: new Audio('Sound/collectbean2.mp3')
+                };
+                
+                // Set volume for all sounds
+                Object.values(this.sounds).forEach(sound => {
+                    sound.volume = this.volume;
+                });
+                
+                console.log('🎵 Audio system initialized!');
+            }
+
+            startBackgroundMusic() {
+                if (this.backgroundMusic) {
+                    // Try to play immediately, but handle autoplay restrictions
+                    this.backgroundMusic.play().catch(error => {
+                        console.log('🎵 Background music autoplay blocked - will start on first user interaction');
+                        // Add a one-time click listener to start music on first interaction
+                        const startMusicOnClick = () => {
+                            this.backgroundMusic.play().then(() => {
+                                console.log('🎵 Background music started after user interaction');
+                            });
+                            document.removeEventListener('click', startMusicOnClick);
+                        };
+                        document.addEventListener('click', startMusicOnClick);
+                    });
+                }
+            }
+
+            playSound(soundName) {
+                const sound = this.sounds[soundName];
+                if (sound) {
+                    // Create a clone for overlapping sounds
+                    const soundClone = sound.cloneNode();
+                    soundClone.volume = this.volume;
+                    soundClone.play().catch(error => {
+                        console.log(`🔊 Failed to play sound: ${soundName}`, error);
+                    });
+                }
             }
 
             // Show satisfying money burst effect

@@ -10,13 +10,14 @@ from typing import Dict, List, Optional, Any
 
 class PlantSpecies:
     """Defines a plant species with growth characteristics"""
-    def __init__(self, id: str, name: str, type: str, grow_time: int, base_sell: int, seed_cost: int):
+    def __init__(self, id: str, name: str, type: str, grow_time: int, base_sell: int, seed_cost: int, rarity: str = 'common'):
         self.id = id
         self.name = name
         self.type = type  # 'picker' or 'cutter'
         self.grow_time = grow_time  # seconds to first ready
         self.base_sell = base_sell
         self.seed_cost = seed_cost
+        self.rarity = rarity  # Rarity tier for shop spawn chances
 
 class PlantInstance:
     """Represents a specific planted seed with its characteristics"""
@@ -45,29 +46,73 @@ class ShopSlot:
 class Shop:
     """Manages the seed shop"""
     def __init__(self):
-        self.refresh_at = time.time() + 300  # 5 minutes from now
+        self.refresh_at = time.time() + 180  # 3 minutes from now
         self.slots: List[ShopSlot] = []
         self.refresh_shop()
 
     def refresh_shop(self):
-        """Refresh shop with new seeds"""
-        self.slots = []
-        species_pool = list(PLANT_SPECIES.keys())
-        
-        # Create 6 random slots
+        """Refresh shop with new seeds based on rarity spawn chances"""
         import random
-        for _ in range(6):
-            species_id = random.choice(species_pool)
-            species = PLANT_SPECIES[species_id]
-            slot = ShopSlot(species_id, 3, species.seed_cost)
-            self.slots.append(slot)
+        self.slots = []
         
-        self.refresh_at = time.time() + 300  # Next refresh in 5 minutes
+        # Get all species grouped by rarity
+        species_by_rarity = {}
+        for species_id, species in PLANT_SPECIES.items():
+            rarity = species.rarity
+            if rarity not in species_by_rarity:
+                species_by_rarity[rarity] = []
+            species_by_rarity[rarity].append(species_id)
+        
+        # Track already spawned species to prevent duplicates
+        spawned_species = set()
+        max_slots = 8
+        attempts = 0
+        max_attempts = 50  # Prevent infinite loops
+        
+        while len(self.slots) < max_slots and attempts < max_attempts:
+            attempts += 1
+            spawned = False
+            rarities = list(RARITY_CONFIG.keys())
+            # Shuffle rarities for random selection order
+            random.shuffle(rarities)
+            
+            for rarity in rarities:
+                config = RARITY_CONFIG[rarity]
+                if random.random() < config['spawn_chance']:
+                    # This rarity spawns! Pick a random species from this rarity that we haven't spawned yet
+                    if rarity in species_by_rarity:
+                        available_species = [s for s in species_by_rarity[rarity] if s not in spawned_species]
+                        if available_species:  # Only spawn if we have species left in this rarity
+                            species_id = random.choice(available_species)
+                            species = PLANT_SPECIES[species_id]
+                            
+                            # Generate random quantity based on rarity
+                            quantity = random.randint(config['min_qty'], config['max_qty'])
+                            
+                            slot = ShopSlot(species_id, quantity, species.seed_cost)
+                            self.slots.append(slot)
+                            spawned_species.add(species_id)
+                            spawned = True
+                            break
+            
+            # If nothing spawned and we have few slots, try to force spawn a common that we haven't used
+            if not spawned and len(self.slots) < 4 and 'common' in species_by_rarity:
+                available_commons = [s for s in species_by_rarity['common'] if s not in spawned_species]
+                if available_commons:
+                    species_id = random.choice(available_commons)
+                    species = PLANT_SPECIES[species_id]
+                    config = RARITY_CONFIG['common']
+                    quantity = random.randint(config['min_qty'], config['max_qty'])
+                    slot = ShopSlot(species_id, quantity, species.seed_cost)
+                    self.slots.append(slot)
+                    spawned_species.add(species_id)
+        
+        self.refresh_at = time.time() + 180  # Next refresh in 3 minutes
 
 class GameState:
     """Main game state manager"""
     def __init__(self):
-        self.coins = 100  # Starting coins
+        self.coins = 1000  # Starting coins - increased so players can actually buy seeds
         self.pots: List[Pot] = [Pot(i) for i in range(12)]
         self.plant_instances: Dict[str, PlantInstance] = {}
         self.shop = Shop()
@@ -86,12 +131,12 @@ class GameState:
         else:
             size = 'massive'
         
-        # Finish rarity: None 95%, Shiny 3%, Golden 2%
+        # Finish rarity: None 94%, Silver Shiny 3%, Golden 3%
         finish_roll = random.random()
-        if finish_roll < 0.95:
+        if finish_roll < 0.94:
             finish = 'none'
-        elif finish_roll < 0.98:
-            finish = 'shiny'
+        elif finish_roll < 0.97:
+            finish = 'shiny'  # Silver shiny
         else:
             finish = 'golden'
         
@@ -109,24 +154,36 @@ class GameState:
         
         # Finish multipliers
         if rarity['finish'] == 'shiny':
-            multiplier *= 1.5
+            multiplier *= 3.0  # 200% more valuable (3x multiplier)
         elif rarity['finish'] == 'golden':
-            multiplier *= 2.0
+            multiplier *= 6.0  # 500% more valuable (6x multiplier)
         
         return multiplier
 
-    def buy_seed(self, slot_index: int, pot_index: int) -> bool:
-        """Buy a seed and plant it in a pot"""
+    def buy_seed(self, slot_index: int, pot_index: int = -1) -> bool:
+        """Buy a seed and optionally plant it in a pot. If pot_index is -1, add to inventory"""
+        print(f"🛒 DEBUG: buy_seed called with slot_index={slot_index}, pot_index={pot_index}")
+        
         if slot_index >= len(self.shop.slots):
+            print(f"❌ DEBUG: Invalid slot_index {slot_index}, shop has {len(self.shop.slots)} slots")
             return False
         
         slot = self.shop.slots[slot_index]
+        print(f"📦 DEBUG: Slot found - species: {slot.species_id}, stock: {slot.stock}")
+        
         if slot.stock <= 0:
+            print(f"❌ DEBUG: No stock available, stock: {slot.stock}")
             return False
         
-        pot = self.pots[pot_index]
-        if pot.state != 'empty':
-            return False
+        # If pot_index is specified, check if pot is available
+        if pot_index >= 0:
+            if pot_index >= len(self.pots):
+                print(f"❌ DEBUG: Invalid pot_index {pot_index}, have {len(self.pots)} pots")
+                return False
+            pot = self.pots[pot_index]
+            if pot.state != 'empty':
+                print(f"❌ DEBUG: Pot {pot_index} is not empty, state: {pot.state}")
+                return False
         
         # Calculate price with repeat purchase tax
         price = slot.base_price
@@ -136,7 +193,10 @@ class GameState:
             else:
                 price = int(price * 1.25)  # +25%
         
+        print(f"💰 DEBUG: Price calculation - base: {slot.base_price}, final: {price}, player coins: {self.coins}")
+        
         if self.coins < price:
+            print(f"❌ DEBUG: Not enough coins, need: {price}, have: {self.coins}")
             return False
         
         # Deduct coins and update slot
@@ -144,15 +204,20 @@ class GameState:
         slot.stock -= 1
         slot.purchases_this_roll += 1
         
-        # Create plant instance with rarity
-        instance_id = f"plant_{time.time()}_{pot_index}"
-        rarity = self.generate_rarity()
-        instance = PlantInstance(slot.species_id, time.time(), rarity)
-        
-        # Plant in pot
-        self.plant_instances[instance_id] = instance
-        pot.instance_id = instance_id
-        pot.state = 'growing'
+        if pot_index >= 0:
+            # Plant directly in pot
+            pot = self.pots[pot_index]
+            instance_id = f"plant_{time.time()}_{pot_index}"
+            rarity = self.generate_rarity()
+            instance = PlantInstance(slot.species_id, time.time(), rarity)
+            
+            # Plant in pot
+            self.plant_instances[instance_id] = instance
+            pot.instance_id = instance_id
+            pot.state = 'growing'
+        else:
+            # Add to inventory (handled client-side for now)
+            pass
         
         return True
 
@@ -199,14 +264,52 @@ class GameState:
         }
         return json.dumps(save_data)
 
-# Plant species definitions (MVP 6 species as per PRD)
+# Plant species definitions with rarity categories
 PLANT_SPECIES = {
-    'beanstalk': PlantSpecies('beanstalk', 'Beanstalk', 'picker', 60, 14, 10),
-    'snap_pea': PlantSpecies('snap_pea', 'Snap Pea', 'picker', 75, 18, 12),
-    'jellybean_vine': PlantSpecies('jellybean_vine', 'Jellybean Vine', 'picker', 90, 22, 15),
-    'bamboo_bean': PlantSpecies('bamboo_bean', 'Bamboo-Bean', 'cutter', 120, 34, 20),
-    'coffee_creeper': PlantSpecies('coffee_creeper', 'Coffee Creeper', 'picker', 120, 45, 28),
-    'thunder_pod': PlantSpecies('thunder_pod', 'Thunder Pod', 'cutter', 150, 70, 40)
+    # Common rarity - Slowed down growth times by ~40%
+    'beanstalk': PlantSpecies('beanstalk', 'Beanstalk', 'picker', 35, 14, 120, 'common'),
+    'snap_pea': PlantSpecies('snap_pea', 'Snap Pea', 'picker', 105, 90, 560, 'common'),
+    
+    # Uncommon rarity - Slowed down growth times by ~40%
+    'jellybean_vine': PlantSpecies('jellybean_vine', 'Jellybean Vine', 'picker', 125, 170, 1285, 'uncommon'),
+    'bamboo_bean': PlantSpecies('bamboo_bean', 'Bamboo-Bean', 'cutter', 170, 300, 5410, 'uncommon'),
+    'coffee_beanstalk': PlantSpecies('coffee_beanstalk', 'Coffee Beanstalk', 'picker', 170, 540, 9300, 'uncommon'),
+    
+    # Rare rarity - Slowed down growth times by ~40%
+    'thunder_pod': PlantSpecies('thunder_pod', 'Thunder Pod', 'cutter', 210, 970, 17000, 'rare'),
+    'frost_pea': PlantSpecies('frost_pea', 'Frost Pea', 'picker', 210, 2700, 31000, 'rare'),
+    'choco_vine': PlantSpecies('choco_vine', 'Choco Vine', 'picker', 250, 3500, 35200, 'rare'),
+    
+    # Legendary rarity - Slowed down growth times by ~40%
+    'ironvine': PlantSpecies('ironvine', 'Ironvine', 'cutter', 295, 15300, 90000, 'legendary'),
+    'honeyvine': PlantSpecies('honeyvine', 'Honeyvine', 'picker', 250, 19300, 180000, 'legendary'),
+    'sunbean': PlantSpecies('sunbean', 'Sunbean', 'picker', 340, 25500, 193000, 'legendary'),
+    
+    # Mythical rarity - Slowed down growth times by ~40%
+    'moonbean': PlantSpecies('moonbean', 'Moonbean', 'picker', 340, 43000, 253000, 'mythical'),
+    'cloud_creeper': PlantSpecies('cloud_creeper', 'Cloud Creeper', 'picker', 380, 49000, 295000, 'mythical'),
+    
+    # Ultra-Mythical rarity - Slowed down growth times by ~40%
+    'royal_stalk': PlantSpecies('royal_stalk', 'Royal Stalk', 'cutter', 420, 86000, 465000, 'ultra_mythical'),
+    'crystal_bean': PlantSpecies('crystal_bean', 'Crystal Bean', 'picker', 420, 120000, 600000, 'ultra_mythical'),
+    'neon_soy': PlantSpecies('neon_soy', 'Neon Soy', 'cutter', 460, 160000, 570000, 'ultra_mythical'),
+    
+    # Godly rarity - Slowed down growth times by ~40%
+    'vinecorn': PlantSpecies('vinecorn', 'Vinecorn', 'cutter', 340, 210000, 1200000, 'godly'),
+    'fire_pod': PlantSpecies('fire_pod', 'Fire Pod', 'cutter', 500, 280000, 1800000, 'godly'),
+    'shadow_bean': PlantSpecies('shadow_bean', 'Shadow Bean', 'picker', 420, 320000, 3182000, 'godly'),
+    'prism_stalk': PlantSpecies('prism_stalk', 'Prism Stalk', 'picker', 670, 340000, 5620000, 'godly')
+}
+
+# Rarity spawn chances and quantity ranges - VERY LIMITED STOCK
+RARITY_CONFIG = {
+    'common': {'spawn_chance': 0.50, 'min_qty': 2, 'max_qty': 5},        # 50% chance, 2-5 stock
+    'uncommon': {'spawn_chance': 0.35, 'min_qty': 1, 'max_qty': 4},     # 35% chance, 1-4 stock
+    'rare': {'spawn_chance': 0.20, 'min_qty': 1, 'max_qty': 3},         # 20% chance, 1-3 stock  
+    'legendary': {'spawn_chance': 0.10, 'min_qty': 1, 'max_qty': 2},    # 10% chance, 1-2 stock
+    'mythical': {'spawn_chance': 0.05, 'min_qty': 1, 'max_qty': 2},     # 5% chance, 1-2 stock
+    'ultra_mythical': {'spawn_chance': 0.02, 'min_qty': 1, 'max_qty': 1}, # 2% chance, 1 stock only
+    'godly': {'spawn_chance': 0.008, 'min_qty': 1, 'max_qty': 1}        # 0.8% chance, 1 stock only
 }
 
 # Global game instance
@@ -229,15 +332,25 @@ def get_game_state():
 def get_shop_data():
     """Get current shop data for frontend"""
     state = get_game_state()
+    
+    # Check if shop needs refresh
+    current_time = time.time()
+    if current_time >= state.shop.refresh_at:
+        state.shop.refresh_shop()
+    
     return {
         'slots': [
             {
                 'species_id': slot.species_id,
                 'species_name': PLANT_SPECIES[slot.species_id].name,
+                'species_type': PLANT_SPECIES[slot.species_id].type,
+                'rarity': PLANT_SPECIES[slot.species_id].rarity,
                 'stock': slot.stock,
                 'price': slot.base_price * (1.1 if slot.purchases_this_roll == 1 else 1.25 if slot.purchases_this_roll > 1 else 1.0),
                 'base_price': slot.base_price,
-                'purchases': slot.purchases_this_roll
+                'purchases': slot.purchases_this_roll,
+                'grow_time': PLANT_SPECIES[slot.species_id].grow_time,
+                'base_sell': PLANT_SPECIES[slot.species_id].base_sell
             } for slot in state.shop.slots
         ],
         'refresh_at': state.shop.refresh_at,
