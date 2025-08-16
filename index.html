@@ -131,6 +131,8 @@
             cursor: pointer;
             transition: all 0.3s ease;
             filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+            position: relative;
+            z-index: 10; /* Definitively in front of vines (z-index: 1) */
         }
 
         .pot:hover {
@@ -144,9 +146,74 @@
             transition: all 0.2s ease;
         }
 
-        .pot.ready {
-            animation: readyGlow 2s ease-in-out infinite alternate;
+        /* Vine Growing System */
+        .vine {
+            position: absolute;
+            bottom: 40px; /* Start at pot level */
+            left: 50%;
+            transform: translateX(-50%) scale(0.3, 0); /* Start narrow and no height */
+            transform-origin: bottom center; /* Grow upward from bottom */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom center;
+            width: 250px; /* Much bigger width */
+            height: 500px; /* Much bigger height */
+            pointer-events: none; /* Default no pointer events during growth */
+            z-index: 1; /* Definitely behind pot images */
+            transition: transform 0.3s ease;
+            visibility: visible; /* Ensure vine stays visible */
+            opacity: 1; /* Ensure vine stays opaque */
         }
+
+        .vine.growing {
+            animation: vineGrowth linear forwards;
+        }
+
+        .vine.ready {
+            transform: translateX(-50%) scale(1, 1) !important;
+            animation: none; /* Remove golden glow animation */
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto; /* Enable hover for ready vines */
+        }
+
+        .vine.grown {
+            transform: translateX(-50%) scale(1, 1) !important;
+            animation: none; /* Stop any animations */
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto; /* Enable hover for grown vines */
+        }
+
+        /* Vine Hover Effect - like pot hover */
+        .vine.ready:hover, .vine.grown:hover {
+            transform: translateX(-50%) scale(1.1, 1.05) translateY(-3px) !important;
+            filter: drop-shadow(4px 4px 8px rgba(0,0,0,0.4));
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes vineGrowth {
+            0% {
+                transform: translateX(-50%) scale(0.3, 0); /* Start narrow and no height */
+            }
+            50% {
+                transform: translateX(-50%) scale(0.7, 0.5); /* Mid growth - getting wider and taller */
+            }
+            100% {
+                transform: translateX(-50%) scale(1, 1); /* Full size both ways */
+            }
+        }
+
+        @keyframes readyPulse {
+            from {
+                filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
+            }
+            to {
+                filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.9));
+            }
+        }
+
+
 
         .pot.growing {
             filter: drop-shadow(0 0 8px rgba(76, 175, 80, 0.6));
@@ -391,6 +458,195 @@
                 transform: scale(1);
                 color: #4A4A4A;
             }
+        }
+
+        /* Bean spawn system styles */
+        .vine-bean {
+            position: absolute !important;
+            width: 40px;
+            height: 40px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 3;
+            pointer-events: auto !important; /* Enable hover interactions */
+            transform-origin: center;
+            transition: all 0.3s ease; /* Smooth hover transition */
+            cursor: pointer; /* Show it's interactive */
+            /* NO DEFAULT ANIMATION - will be added after spawning */
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
+        }
+
+        /* Hover effect for beans - expand slightly while preserving rotation (but not when clicked or flying) */
+        .vine-bean:hover:not(.clicked):not(.flying-to-money) {
+            transform: scale(calc(var(--final-scale) * 1.3)) rotate(var(--final-rotation)) !important;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.9)) !important;
+            z-index: 4; /* Bring hovered bean to front */
+        }
+
+        /* Satisfying click effect for beans */
+        .vine-bean.clicked {
+            animation: beanClickPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards !important;
+        }
+
+        @keyframes beanClickPop {
+            0% {
+                transform: scale(var(--final-scale)) rotate(var(--final-rotation));
+                filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
+            }
+            50% {
+                transform: scale(calc(var(--final-scale) * 1.8)) rotate(calc(var(--final-rotation) + 15deg));
+                filter: drop-shadow(0 0 25px rgba(255, 215, 0, 1.2)) drop-shadow(0 0 50px rgba(255, 215, 0, 0.8));
+            }
+            100% {
+                transform: scale(calc(var(--final-scale) * 1.3)) rotate(calc(var(--final-rotation) + 10deg));
+                filter: drop-shadow(0 0 20px rgba(255, 215, 0, 1.0)) drop-shadow(0 0 40px rgba(255, 215, 0, 0.6));
+            }
+        }
+
+        /* Click burst effect around bean */
+        .click-burst {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99;
+            animation: clickBurstAnimation 0.4s ease-out forwards;
+        }
+
+        @keyframes clickBurstAnimation {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+                background: radial-gradient(circle, rgba(255,215,0,0.8) 0%, rgba(255,215,0,0.4) 30%, rgba(255,255,255,0.2) 60%, transparent 100%);
+                box-shadow: 0 0 20px rgba(255,215,0,0.8);
+            }
+            50% {
+                transform: scale(1);
+                opacity: 0.8;
+                background: radial-gradient(circle, rgba(255,215,0,0.6) 0%, rgba(255,215,0,0.3) 30%, rgba(255,255,255,0.1) 60%, transparent 100%);
+                box-shadow: 0 0 40px rgba(255,215,0,0.6);
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+                background: radial-gradient(circle, transparent 0%, transparent 30%, transparent 60%, transparent 100%);
+                box-shadow: 0 0 60px rgba(255,215,0,0.2);
+            }
+        }
+
+        /* Amazing bean-to-money flying animation */
+        .vine-bean.flying-to-money {
+            z-index: 100 !important; /* Above everything */
+            pointer-events: none !important; /* No more interactions */
+            animation: none !important; /* Stop pulsing */
+            transition: none !important; /* Disable normal transitions */
+        }
+
+        @keyframes beanFlyToMoney {
+            0% {
+                transform: scale(var(--final-scale)) rotate(var(--final-rotation));
+                opacity: 1;
+                filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+            }
+            25% {
+                transform: scale(calc(var(--final-scale) * 1.5)) rotate(calc(var(--final-rotation) + 180deg));
+                opacity: 1;
+                filter: drop-shadow(0 0 20px rgba(255, 215, 0, 1.0)) drop-shadow(0 0 40px rgba(255, 215, 0, 0.6));
+            }
+            75% {
+                transform: scale(calc(var(--final-scale) * 0.8)) rotate(calc(var(--final-rotation) + 540deg));
+                opacity: 0.9;
+                filter: drop-shadow(0 0 25px rgba(255, 215, 0, 1.2)) drop-shadow(0 0 50px rgba(255, 215, 0, 0.8));
+            }
+            100% {
+                transform: scale(0.2) rotate(calc(var(--final-rotation) + 720deg));
+                opacity: 0;
+                filter: drop-shadow(0 0 30px rgba(255, 215, 0, 1.5)) drop-shadow(0 0 60px rgba(255, 215, 0, 1.0));
+            }
+        }
+
+        /* Subtle screen shake for satisfying feedback */
+        @keyframes screenShake {
+            0% { transform: translateX(0); }
+            10% { transform: translateX(-2px) translateY(1px); }
+            20% { transform: translateX(2px) translateY(-1px); }
+            30% { transform: translateX(-1px) translateY(2px); }
+            40% { transform: translateX(1px) translateY(-2px); }
+            50% { transform: translateX(-2px) translateY(1px); }
+            60% { transform: translateX(2px) translateY(-1px); }
+            70% { transform: translateX(-1px) translateY(2px); }
+            80% { transform: translateX(1px) translateY(-2px); }
+            90% { transform: translateX(-1px) translateY(1px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Money burst effect when beans are collected */
+        .money-burst {
+            position: fixed;
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 24px;
+            font-family: 'Courier New', monospace;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            z-index: 101;
+            pointer-events: none;
+            animation: moneyBurst 1.5s ease-out forwards;
+        }
+
+        @keyframes moneyBurst {
+            0% {
+                transform: scale(0.5) translateY(0px);
+                opacity: 0;
+            }
+            20% {
+                transform: scale(1.2) translateY(-10px);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.0) translateY(-40px);
+                opacity: 0;
+            }
+        }
+
+        /* Only apply pulsing animation after bean is spawned and positioned, but pause on hover and when clicked */
+        .vine-bean.spawned:not(:hover):not(.clicked):not(.flying-to-money) {
+            animation: beanPulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes beanPulse {
+            0% {
+                /* Use CSS variables to preserve individual bean transforms */
+                transform: scale(calc(var(--final-scale) * 0.9)) rotate(var(--final-rotation));
+                opacity: 0.8;
+                filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
+            }
+            50% {
+                transform: scale(calc(var(--final-scale) * 1.1)) rotate(var(--final-rotation));
+                opacity: 1;
+                filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.8));
+            }
+            100% {
+                transform: scale(calc(var(--final-scale) * 0.95)) rotate(var(--final-rotation));
+                opacity: 0.9;
+                filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7));
+            }
+        }
+
+        /* Initial spawning state for beans */
+        .vine-bean:not(.spawned) {
+            transform-origin: center;
+            /* Initial state - invisible and small */
+            opacity: 0;
+            transform: scale(0) rotate(0deg);
+            transition: all 0.5s ease-out;
+        }
+
+        .vine-bean.spawned {
+            /* Visible state after spawning */
+            opacity: 0.8;
+            transition: all 0.5s ease-out;
         }
 
         /* Inventory Panel Styles */
@@ -905,6 +1161,7 @@
                 this.draggedItem = null;
                 this.dragElement = null;
                 this.hoveredPot = null;
+                this.growingPlants = new Map(); // Track growing plants by pot index
                 this.init();
             }
 
@@ -1025,17 +1282,25 @@
 
             async onPotClick(index) {
                 console.log(`Pot ${index} clicked!`);
-                const potData = this.pots[index].data;
+                const potData = this.pots[index];
                 
                 if (potData && potData.state === 'ready') {
-                    // TODO: Implement harvest logic
+                    // Harvest the plant
                     console.log(`Harvesting pot ${index}`);
+                    this.harvestPlant(index);
                 } else if (potData && potData.state === 'empty') {
-                    // TODO: Show shop to buy seeds
+                    // Show shop to buy seeds
                     console.log(`Pot ${index} is empty - show shop`);
+                    this.openShop();
                 } else if (potData && potData.state === 'growing') {
                     // Show growth progress
-                    console.log(`Pot ${index} is growing...`);
+                    const plantData = this.growingPlants.get(index);
+                    if (plantData) {
+                        const elapsed = Date.now() - plantData.startTime;
+                        const progress = Math.min((elapsed / plantData.growthTime) * 100, 100);
+                        console.log(`Pot ${index} is growing... ${progress.toFixed(1)}% complete`);
+                        alert(`${plantData.seedName} is growing!\nProgress: ${progress.toFixed(1)}%`);
+                    }
                 }
                 
                 // Refresh game state
@@ -1462,14 +1727,7 @@
             }
 
             onMouseMove(e) {
-                if (!this.isDragging || !this.dragElement) {
-                    // Only log occasionally to avoid spam
-                    if (Math.random() < 0.01) {
-                        console.log('🖱️ DEBUG: onMouseMove - not dragging or no dragElement');
-                        console.log('🖱️ DEBUG: isDragging:', this.isDragging, 'dragElement:', !!this.dragElement);
-                    }
-                    return;
-                }
+                if (!this.isDragging || !this.dragElement) return;
                 
                 // Update drag element position
                 this.dragElement.style.left = e.clientX + 'px';
@@ -1483,11 +1741,6 @@
                 // Get element under cursor (drag element already has pointer-events: none)
                 const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
                 
-                // Only log occasionally to avoid spam during hover
-                if (Math.random() < 0.05) {
-                    console.log('🎯 DEBUG: checkPotHover - elementBelow:', elementBelow?.tagName, elementBelow?.className);
-                }
-                
                 // Check if we're over a pot
                 const potElement = elementBelow?.closest('.pot');
                 
@@ -1495,14 +1748,9 @@
                     const potIndex = parseInt(potElement.dataset.potIndex);
                     const potData = this.pots[potIndex];
                     
-                    if (Math.random() < 0.05) {
-                        console.log('🎯 DEBUG: Over pot', potIndex, 'state:', potData?.state);
-                    }
-                    
                     // Check if pot is empty - just highlight, no pouring yet
                     if (potData && potData.state === 'empty') {
                         if (this.hoveredPot !== potIndex) {
-                            console.log('🎯 DEBUG: Setting hoveredPot to', potIndex);
                             this.hoveredPot = potIndex;
                             potElement.classList.add('drag-hover');
                         }
@@ -1647,24 +1895,10 @@
                 
                 // Wait for the pouring animation, then plant the seed
                 setTimeout(() => {
-                    console.log('⏱️ DEBUG: Timeout completed, updating pot state');
+                    console.log('⏱️ DEBUG: Timeout completed, starting vine growth');
                     
-                    // Update pot state to growing
-                    if (this.pots[potIndex]) {
-                        this.pots[potIndex].state = 'growing';
-                        this.pots[potIndex].data = {
-                            state: 'growing',
-                            seedName: this.draggedItem.name,
-                            plantedTime: Date.now()
-                        };
-                        
-                        // Update pot visual
-                        const potElement = document.querySelector(`[data-pot-index="${potIndex}"]`);
-                        if (potElement) {
-                            potElement.className = 'pot growing';
-                            console.log('🎯 DEBUG: Updated pot className to:', potElement.className);
-                        }
-                    }
+                    // Start growing the vine
+                    this.startVineGrowth(potIndex, this.draggedItem.name);
                     
                     console.log(`✅ DEBUG: Successfully planted ${this.draggedItem.name} in pot ${potIndex}`);
                     
@@ -1674,11 +1908,616 @@
                 }, 300); // Wait 300ms for the pouring animation
             }
 
+            startVineGrowth(potIndex, seedName) {
+                console.log('🌱 DEBUG: startVineGrowth called for', seedName, 'in pot', potIndex);
+                
+                const growthData = this.getPlantGrowthData()[seedName];
+                if (!growthData) {
+                    console.error('❌ DEBUG: No growth data found for', seedName);
+                    return;
+                }
+                
+                console.log('🌱 DEBUG: Growth data:', growthData);
+                
+                // Update pot state
+                if (this.pots[potIndex]) {
+                    this.pots[potIndex].state = 'growing';
+                    this.pots[potIndex].data = {
+                        state: 'growing',
+                        seedName: seedName,
+                        plantedTime: Date.now()
+                    };
+                }
+                
+                // Create vine element
+                const vineElement = document.createElement('div');
+                vineElement.className = 'vine growing';
+                vineElement.style.backgroundImage = `url('${growthData.vineImage}')`;
+                vineElement.style.animationDuration = `${growthData.growthTime}s`;
+                
+                // Position vine relative to pot
+                const potElement = document.querySelector(`[data-pot-index="${potIndex}"]`);
+                if (potElement) {
+                    // Position vine in same container as pots but absolutely positioned over the specific pot
+                    const potsContainer = document.getElementById('potsContainer');
+                    if (potsContainer) {
+                        // Get pot position relative to container
+                        const potRect = potElement.getBoundingClientRect();
+                        const containerRect = potsContainer.getBoundingClientRect();
+                        
+                        vineElement.style.left = (potRect.left - containerRect.left + potRect.width/2) + 'px';
+                        vineElement.style.transform = 'translateX(-50%) scale(0.3, 0)';
+                        
+                        potsContainer.appendChild(vineElement);
+                        console.log('🌱 DEBUG: Vine element created and positioned at pot', potIndex);
+                        
+                        // Add animation end listener to ensure smooth transition
+                        vineElement.addEventListener('animationend', () => {
+                            console.log('🎬 DEBUG: Growth animation completed for pot', potIndex);
+                            // Force the grown state if animation completes
+                            if (vineElement.classList.contains('growing')) {
+                                vineElement.classList.remove('growing');
+                                vineElement.classList.add('grown');
+                                vineElement.style.transform = 'translateX(-50%) scale(1, 1)';
+                                console.log('🔧 DEBUG: Forced vine to grown state after animation');
+                            }
+                        });
+                    }
+                }
+                
+                // Track growing plant
+                this.growingPlants.set(potIndex, {
+                    vineElement: vineElement,
+                    seedName: seedName,
+                    startTime: Date.now(),
+                    growthTime: growthData.growthTime * 1000, // Convert to milliseconds
+                    ready: false
+                });
+                
+                // Set timer for when plant is ready
+                setTimeout(() => {
+                    this.makeVineReady(potIndex);
+                }, growthData.growthTime * 1000);
+                
+                console.log(`🌱 DEBUG: Started growing ${seedName} for ${growthData.growthTime} seconds`);
+            }
+
+            makeVineReady(potIndex) {
+                console.log('🏆 DEBUG: makeVineReady called for pot', potIndex);
+                
+                const plantData = this.growingPlants.get(potIndex);
+                if (!plantData) {
+                    console.error('❌ DEBUG: No growing plant found for pot', potIndex);
+                    return;
+                }
+                
+                // Update vine visual state - vine stays fully grown but gets golden glow
+                if (plantData.vineElement) {
+                    plantData.vineElement.classList.remove('growing');
+                    plantData.vineElement.classList.add('grown', 'ready');
+                    console.log('🏆 DEBUG: Vine is now fully grown and ready to harvest!');
+                    console.log('🔍 DEBUG: Vine element classes:', plantData.vineElement.className);
+                    console.log('🔍 DEBUG: Vine element style:', plantData.vineElement.style.transform);
+                    
+                    // 🫘 SPAWN BEANS AROUND THE GROWN VINE!
+                    this.spawnBeansAroundVine(potIndex, plantData.seedName, plantData.vineElement);
+                }
+                
+                // Update pot state
+                if (this.pots[potIndex]) {
+                    this.pots[potIndex].state = 'ready';
+                    this.pots[potIndex].data.state = 'ready';
+                    
+                    const potElement = document.querySelector(`[data-pot-index="${potIndex}"]`);
+                    if (potElement) {
+                        potElement.className = 'pot ready';
+                    }
+                }
+                
+                // Update plant data
+                plantData.ready = true;
+                this.growingPlants.set(potIndex, plantData);
+                
+                console.log(`🏆 DEBUG: ${plantData.seedName} in pot ${potIndex} is ready for harvest!`);
+            }
+
+            harvestPlant(potIndex) {
+                console.log('🌾 DEBUG: harvestPlant called for pot', potIndex);
+                
+                const plantData = this.growingPlants.get(potIndex);
+                if (!plantData) {
+                    console.error('❌ DEBUG: No plant data found for pot', potIndex);
+                    return;
+                }
+                
+                // 🫘 REMOVE BEANS FIRST!
+                this.removeBeansFromVine(potIndex);
+                
+                // Remove vine element
+                if (plantData.vineElement) {
+                    plantData.vineElement.remove();
+                    console.log('🌾 DEBUG: Vine element removed');
+                }
+                
+                // Reset pot state
+                if (this.pots[potIndex]) {
+                    this.pots[potIndex].state = 'empty';
+                    this.pots[potIndex].data = { state: 'empty' };
+                    
+                    const potElement = document.querySelector(`[data-pot-index="${potIndex}"]`);
+                    if (potElement) {
+                        potElement.className = 'pot';
+                    }
+                }
+                
+                // Remove from growing plants tracking
+                this.growingPlants.delete(potIndex);
+                
+                // TODO: Add harvested plant to inventory or give coins
+                console.log(`🌾 DEBUG: Harvested ${plantData.seedName} from pot ${potIndex}!`);
+                alert(`Harvested ${plantData.seedName}! 🌾\n\n(Harvesting rewards coming soon!)`);
+            }
+
+            // Plant growth data and vine mapping
+            getPlantGrowthData() {
+                return {
+                    'Beanstalk': { growthTime: 25, vineImage: 'Assets/Vines/Beanstalkvine.png', type: 'Picker' },
+                    'Snap Pea': { growthTime: 75, vineImage: 'Assets/Vines/peaseedvine.png', type: 'Picker' },
+                    'Jellybean Vine': { growthTime: 90, vineImage: 'Assets/Vines/Jellybeanvine.png', type: 'Picker' },
+                    'Bamboo Bean': { growthTime: 120, vineImage: 'Assets/Vines/bamboovine.png', type: 'Cutter' },
+                    'Coffee Creeper': { growthTime: 120, vineImage: 'Assets/Vines/Coffebeanvine.png', type: 'Picker' },
+                    'Thunder Pod': { growthTime: 150, vineImage: 'Assets/Vines/Thunderpodvine.png', type: 'Cutter' },
+                    'Frost Pea': { growthTime: 150, vineImage: 'Assets/Vines/frostvine.png', type: 'Picker' },
+                    'Choco Vine': { growthTime: 180, vineImage: 'Assets/Vines/Chocovine.png', type: 'Picker' },
+                    'Iron Vine': { growthTime: 210, vineImage: 'Assets/Vines/Ironvine.png', type: 'Cutter' },
+                    'Honey Vine': { growthTime: 180, vineImage: 'Assets/Vines/Honeyvine.png', type: 'Picker' },
+                    'Sunbean': { growthTime: 240, vineImage: 'Assets/Vines/Sunbeanvine.png', type: 'Picker' },
+                    'Moonbean': { growthTime: 240, vineImage: 'Assets/Vines/moonbeanvine.png', type: 'Picker' },
+                    'Cloud Creeper': { growthTime: 270, vineImage: 'Assets/Vines/Cloudvine.png', type: 'Picker' },
+                    'Royal Stalk': { growthTime: 300, vineImage: 'Assets/Vines/Royalstalkvine.png', type: 'Cutter' },
+                    'Crystal Bean': { growthTime: 300, vineImage: 'Assets/Vines/Crystalbeanvine.png', type: 'Picker' },
+                    'Neon Soy': { growthTime: 330, vineImage: 'Assets/Vines/Neonsoyvine.png', type: 'Cutter' },
+                    'Vinecorn': { growthTime: 240, vineImage: 'Assets/Vines/Cornvine.png', type: 'Cutter' },
+                    'Fire Pod': { growthTime: 360, vineImage: 'Assets/Vines/Firepodvine.png', type: 'Cutter' },
+                    'Shadow Bean': { growthTime: 300, vineImage: 'Assets/Vines/Shadowbeanvine.png', type: 'Picker' },
+                    'Prism Stalk': { growthTime: 480, vineImage: 'Assets/Vines/Prysmvine.png', type: 'Picker' }
+                };
+            }
+
+            // Bean mapping for different plant types
+            getBeanImageForPlant(plantName) {
+                const beanMapping = {
+                    'Beanstalk': 'Assets/BasicBeans/beanstalkbean.png', // Correct bean for basic beanstalk
+                    'Snap Pea': 'Assets/BasicBeans/Snappeabean.png',
+                    'Jellybean Vine': 'Assets/BasicBeans/Jellybean.png',
+                    'Bamboo Bean': 'Assets/BasicBeans/Bamboobean.png',
+                    'Coffee Creeper': 'Assets/BasicBeans/Coffebean.png',
+                    'Thunder Pod': 'Assets/BasicBeans/Thunderboltpeabean.png',
+                    'Frost Pea': 'Assets/BasicBeans/Frostbean.png',
+                    'Choco Vine': 'Assets/BasicBeans/Chocobean.png',
+                    'Iron Vine': 'Assets/BasicBeans/Ironbean.png',
+                    'Honey Vine': 'Assets/BasicBeans/Honeybean.png',
+                    'Sunbean': 'Assets/BasicBeans/Sunbean.png',
+                    'Moonbean': 'Assets/BasicBeans/Moombean.png',
+                    'Cloud Creeper': 'Assets/BasicBeans/Cloudbean.png',
+                    'Royal Stalk': 'Assets/BasicBeans/Royalbean.png',
+                    'Crystal Bean': 'Assets/BasicBeans/Crystalbean.png',
+                    'Neon Soy': 'Assets/BasicBeans/Neonbean.png',
+                    'Vinecorn': 'Assets/BasicBeans/Cornbean.png',
+                    'Fire Pod': 'Assets/BasicBeans/Firebean.png',
+                    'Shadow Bean': 'Assets/BasicBeans/Shadowbean.png',
+                    'Prism Stalk': 'Assets/BasicBeans/Prysmbean.png'
+                };
+                
+                return beanMapping[plantName] || 'Assets/BasicBeans/Jellybean.png'; // Default fallback
+            }
+
+            // Bean value mapping based on plant types
+            getBeanValueForPlant(plantName) {
+                const beanValues = {
+                    'Beanstalk': () => 12 + Math.floor(Math.random() * 5), // 12-16 random
+                    'Snap Pea': 90,
+                    'Jellybean Vine': 170,
+                    'Bamboo Bean': 300,
+                    'Coffee Creeper': 540,
+                    'Thunder Pod': 970,
+                    'Frost Pea': 2700,
+                    'Choco Vine': 3500,
+                    'Iron Vine': 15300,
+                    'Honey Vine': 19300,
+                    'Sunbean': 25500,
+                    'Moonbean': 43000,
+                    'Cloud Creeper': 49000,
+                    'Royal Stalk': 86000,
+                    'Crystal Bean': 120000,
+                    'Neon Soy': 160000,
+                    'Vinecorn': 210000,
+                    'Fire Pod': 280000,
+                    'Shadow Bean': 320000,
+                    'Prism Stalk': 340000
+                };
+                
+                const value = beanValues[plantName];
+                return typeof value === 'function' ? value() : (value || 10); // Default 10 if not found
+            }
+
+            // Spawn beans around a grown beanstalk
+            spawnBeansAroundVine(potIndex, plantName, vineElement) {
+                console.log('🫘 DEBUG: spawnBeansAroundVine called for', plantName, 'in pot', potIndex);
+                
+                // Check if beans are already spawning for this vine
+                const plantData = this.growingPlants.get(potIndex);
+                if (plantData && plantData.isSpawningBeans) {
+                    console.log('🫘 DEBUG: Beans already spawning for pot', potIndex);
+                    return;
+                }
+                
+                const beanImage = this.getBeanImageForPlant(plantName);
+                const potsContainer = document.getElementById('potsContainer');
+                
+                if (!potsContainer || !vineElement) {
+                    console.error('❌ DEBUG: Missing potsContainer or vineElement');
+                    return;
+                }
+                
+                // Mark as spawning to prevent duplicate calls
+                if (plantData) {
+                    plantData.isSpawningBeans = true;
+                    plantData.beanCount = 0;
+                    plantData.beanSpawnIndex = 0; // Track spawn index for unique IDs
+                    this.growingPlants.set(potIndex, plantData);
+                }
+                
+                // Get vine position
+                const vineRect = vineElement.getBoundingClientRect();
+                const containerRect = potsContainer.getBoundingClientRect();
+                
+                // Calculate relative position
+                const vineX = vineRect.left - containerRect.left + (vineRect.width / 2);
+                const vineY = vineRect.top - containerRect.top + (vineRect.height / 2);
+                
+                console.log('🫘 DEBUG: Starting continuous bean spawning around vine at', vineX, vineY);
+                
+                // Start initial burst of beans (8-12 beans immediately)
+                const initialBeans = Math.floor(Math.random() * 5) + 8; // 8-12 initial beans
+                const initialSpawnInterval = 600; // 600ms between initial beans
+                
+                for (let i = 0; i < initialBeans; i++) {
+                    setTimeout(() => {
+                        this.spawnSingleBeanRandomly(potIndex, beanImage, vineX, vineY, plantData.beanSpawnIndex++, plantName);
+                    }, i * initialSpawnInterval + Math.random() * 200);
+                }
+                
+                // Start continuous spawning system to maintain 20 beans max
+                this.startContinuousSpawning(potIndex, beanImage, vineX, vineY, plantName);
+                
+                console.log(`🫘 DEBUG: Started initial batch of ${initialBeans} beans + continuous spawning system`);
+            }
+
+            // Start continuous spawning system to maintain max beans
+            startContinuousSpawning(potIndex, beanImage, vineX, vineY, plantName) {
+                const plantData = this.growingPlants.get(potIndex);
+                if (!plantData) return;
+                
+                // Store spawning info for continuous use
+                plantData.continuousSpawning = {
+                    beanImage: beanImage,
+                    vineX: vineX,
+                    vineY: vineY,
+                    plantName: plantName,
+                    intervalId: null
+                };
+                
+                // Start the continuous spawning interval (check every 2-4 seconds)
+                const checkInterval = 2000 + Math.random() * 2000; // 2-4 seconds
+                plantData.continuousSpawning.intervalId = setInterval(() => {
+                    this.checkAndSpawnBeans(potIndex);
+                }, checkInterval);
+                
+                this.growingPlants.set(potIndex, plantData);
+                console.log(`🔄 DEBUG: Started continuous spawning for pot ${potIndex} (checking every ${Math.round(checkInterval/1000)}s)`);
+            }
+
+            // Check current bean count and spawn more if needed
+            checkAndSpawnBeans(potIndex) {
+                const plantData = this.growingPlants.get(potIndex);
+                if (!plantData || !plantData.continuousSpawning) return;
+                
+                // Check if vine is still ready (not harvested)
+                if (this.pots[potIndex]?.state !== 'ready') {
+                    console.log('🔄 DEBUG: Stopping continuous spawning - vine no longer ready');
+                    this.stopContinuousSpawning(potIndex);
+                    return;
+                }
+                
+                // Count current beans around this vine
+                const currentBeans = document.querySelectorAll(`[data-pot-index="${potIndex}"].vine-bean:not(.flying-to-money)`);
+                const currentCount = currentBeans.length;
+                const maxBeans = 20;
+                
+                if (currentCount < maxBeans) {
+                    const beansToSpawn = Math.min(maxBeans - currentCount, 3); // Spawn 1-3 beans at a time
+                    const spawning = plantData.continuousSpawning;
+                    
+                    console.log(`🌱 DEBUG: Pot ${potIndex} has ${currentCount}/${maxBeans} beans - spawning ${beansToSpawn} more`);
+                    
+                    // Spawn the needed beans with slight delays
+                    for (let i = 0; i < beansToSpawn; i++) {
+                        setTimeout(() => {
+                            plantData.beanSpawnIndex = (plantData.beanSpawnIndex || 0) + 1;
+                            this.spawnSingleBeanRandomly(
+                                potIndex, 
+                                spawning.beanImage, 
+                                spawning.vineX, 
+                                spawning.vineY, 
+                                plantData.beanSpawnIndex, 
+                                spawning.plantName
+                            );
+                        }, i * 300 + Math.random() * 200); // 300ms between spawns + random delay
+                    }
+                }
+            }
+
+            // Stop continuous spawning (when harvesting)
+            stopContinuousSpawning(potIndex) {
+                const plantData = this.growingPlants.get(potIndex);
+                if (plantData?.continuousSpawning?.intervalId) {
+                    clearInterval(plantData.continuousSpawning.intervalId);
+                    plantData.continuousSpawning = null;
+                    this.growingPlants.set(potIndex, plantData);
+                    console.log(`🛑 DEBUG: Stopped continuous spawning for pot ${potIndex}`);
+                }
+            }
+
+            // Spawn a single bean at a random position alongside the vine
+            spawnSingleBeanRandomly(potIndex, beanImage, vineX, vineY, beanIndex, plantName) {
+                const plantData = this.growingPlants.get(potIndex);
+                if (!plantData) {
+                    return; // Stop spawning if plant is gone
+                }
+                
+                // Check current bean count via DOM (more reliable than tracking)
+                const currentBeans = document.querySelectorAll(`[data-pot-index="${potIndex}"].vine-bean:not(.flying-to-money)`);
+                if (currentBeans.length >= 20) {
+                    console.log('🫘 DEBUG: Max beans reached for pot', potIndex, '- skipping spawn');
+                    return; // Already at max beans
+                }
+                
+                const potsContainer = document.getElementById('potsContainer');
+                if (!potsContainer) return;
+                
+                // Position beans closer to the middle of the vine, shifted slightly left
+                const side = Math.random() < 0.5 ? -1 : 1; // -1 = left side, 1 = right side
+                const sideDistance = 15 + Math.random() * 25; // Distance 15-40px from vine center (closer!)
+                const randomX = (side * sideDistance) - 12; // Left or right of vine, with tiny bit more left shift (-12px)
+                
+                // Position along the vine height, shifted slightly up
+                const vineHeight = 340; // Slightly reduced vine height (was 350)
+                const randomY = Math.random() * vineHeight - (vineHeight * 0.4) - 10; // Shifted up by 25px (from +15 to -10)
+                
+                // Random rotation for orientation - this MUST be preserved!
+                const randomRotation = Math.random() * 360; // 0-360° rotation
+                const randomScale = 0.8 + Math.random() * 0.4; // Random size 0.8x-1.2x
+                
+                // Random animation delay
+                const randomDelay = Math.random() * 1.5; // 0-1.5s delay
+                
+                // Create bean element
+                const bean = document.createElement('div');
+                bean.className = 'vine-bean';
+                bean.style.backgroundImage = `url('${beanImage}')`;
+                bean.style.left = (vineX + randomX) + 'px';
+                bean.style.top = (vineY + randomY) + 'px';
+                bean.style.animationDelay = randomDelay + 's';
+                bean.dataset.potIndex = potIndex;
+                bean.dataset.beanIndex = beanIndex;
+                bean.dataset.plantName = plantName; // Store plant name for value calculation
+                
+                // Store the final transform values as CSS variables for the animation
+                bean.style.setProperty('--final-scale', randomScale);
+                bean.style.setProperty('--final-rotation', randomRotation + 'deg');
+                
+                // Add click event handler for amazing bean collection!
+                bean.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.collectBean(bean, plantName);
+                });
+                
+                // Bean starts invisible and small (CSS handles this via :not(.spawned))
+                
+                potsContainer.appendChild(bean);
+                
+                // Animate bean appearance after a brief delay
+                setTimeout(() => {
+                    // Add spawned class which triggers the pulse animation and makes it visible
+                    bean.classList.add('spawned');
+                    // Set the final transform that will be used by the CSS animation
+                    bean.style.transform = `scale(${randomScale}) rotate(${randomRotation}deg)`;
+                }, 50);
+                
+                console.log(`🫘 DEBUG: Spawned bean ${beanIndex} on ${side === -1 ? 'LEFT' : 'RIGHT'} side at (${Math.round(randomX)}, ${Math.round(randomY)}) with ${Math.round(randomRotation)}° rotation (${currentBeans.length + 1}/20)`);
+            }
+
+            // Clean up beans when harvesting
+            removeBeansFromVine(potIndex) {
+                // Stop continuous spawning first
+                this.stopContinuousSpawning(potIndex);
+                
+                const beans = document.querySelectorAll(`[data-pot-index="${potIndex}"].vine-bean`);
+                beans.forEach(bean => {
+                    bean.remove();
+                });
+                
+                // Reset bean tracking state
+                const plantData = this.growingPlants.get(potIndex);
+                if (plantData) {
+                    plantData.isSpawningBeans = false;
+                    plantData.beanCount = 0;
+                    this.growingPlants.set(potIndex, plantData);
+                }
+                
+                console.log('🫘 DEBUG: Removed', beans.length, 'beans from pot', potIndex, '+ stopped continuous spawning');
+            }
+
+            // AMAZING bean collection with flying animation!
+            collectBean(beanElement, plantName) {
+                if (beanElement.classList.contains('flying-to-money')) {
+                    return; // Already being collected
+                }
+                
+                console.log('💰 DEBUG: Collecting bean from', plantName);
+                
+                // Get bean value
+                const beanValue = this.getBeanValueForPlant(plantName);
+                
+                // IMMEDIATE SATISFYING CLICK EFFECTS! ✨
+                this.playClickEffects(beanElement);
+                
+                // Mark bean as flying to prevent multiple clicks
+                beanElement.classList.add('flying-to-money');
+                
+                // Start the flying animation after click effect (300ms delay for satisfaction)
+                setTimeout(() => {
+                    this.animateBeanToMoney(beanElement, beanValue);
+                }, 300);
+            }
+
+            // Play immediate satisfying click effects
+            playClickEffects(beanElement) {
+                // Add satisfying pop animation to the bean
+                beanElement.classList.add('clicked');
+                
+                // Create burst effect around the bean
+                const beanRect = beanElement.getBoundingClientRect();
+                const potsContainer = document.getElementById('potsContainer');
+                
+                const burst = document.createElement('div');
+                burst.className = 'click-burst';
+                burst.style.position = 'fixed';
+                burst.style.left = (beanRect.left + beanRect.width/2 - 60) + 'px'; // Center the 120px burst
+                burst.style.top = (beanRect.top + beanRect.height/2 - 60) + 'px';
+                burst.style.zIndex = '99';
+                
+                document.body.appendChild(burst);
+                
+                // Remove burst after animation
+                setTimeout(() => {
+                    burst.remove();
+                }, 400);
+                
+                // Add screen shake effect for extra satisfaction
+                this.addScreenShake();
+                
+                console.log('✨ DEBUG: Click effects triggered!');
+            }
+
+            // Add subtle screen shake for satisfying feedback
+            addScreenShake() {
+                const gameContainer = document.getElementById('gameContainer');
+                if (gameContainer) {
+                    gameContainer.style.animation = 'screenShake 0.2s ease-in-out';
+                    
+                    setTimeout(() => {
+                        gameContainer.style.animation = '';
+                    }, 200);
+                }
+            }
+
+            // Amazing flying animation from bean to money display
+            animateBeanToMoney(beanElement, beanValue) {
+                // Get current positions
+                const beanRect = beanElement.getBoundingClientRect();
+                const moneyElement = document.getElementById('moneyAmount');
+                const moneyRect = moneyElement.getBoundingClientRect();
+                
+                // Calculate the flight path
+                const startX = beanRect.left + beanRect.width / 2;
+                const startY = beanRect.top + beanRect.height / 2;
+                const endX = moneyRect.left + moneyRect.width / 2;
+                const endY = moneyRect.top + moneyRect.height / 2;
+                
+                // Create a clone for the animation (so original stays in place briefly)
+                const flyingBean = beanElement.cloneNode(true);
+                flyingBean.style.position = 'fixed';
+                flyingBean.style.left = startX + 'px';
+                flyingBean.style.top = startY + 'px';
+                flyingBean.style.zIndex = '100';
+                flyingBean.style.pointerEvents = 'none';
+                flyingBean.classList.add('flying-to-money');
+                
+                document.body.appendChild(flyingBean);
+                
+                console.log(`✈️ DEBUG: Flying bean from (${Math.round(startX)}, ${Math.round(startY)}) to (${Math.round(endX)}, ${Math.round(endY)})`);
+                
+                // Calculate flight duration based on distance (more distance = longer flight)
+                const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                const duration = Math.min(Math.max(distance / 500, 0.8), 2.0); // 0.8-2.0 seconds
+                
+                // Apply the flying animation with calculated duration
+                flyingBean.style.animation = `beanFlyToMoney ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`;
+                
+                // Animate the position using CSS transitions for smooth curved path
+                setTimeout(() => {
+                    flyingBean.style.transition = `all ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
+                    flyingBean.style.left = endX + 'px';
+                    flyingBean.style.top = endY + 'px';
+                }, 10);
+                
+                // Add money and effects when bean reaches destination
+                setTimeout(() => {
+                    // Add the money!
+                    this.addMoney(beanValue);
+                    
+                    // Show money burst effect
+                    this.showMoneyBurst(endX, endY, beanValue);
+                    
+                    // Remove the flying bean
+                    flyingBean.remove();
+                    
+                    // Remove the original bean
+                    beanElement.remove();
+                    
+                    console.log(`💰 DEBUG: Bean collected! Added $${beanValue.toLocaleString()}`);
+                    
+                    // Trigger immediate check for spawning replacement bean (after a short delay)
+                    const potIndex = parseInt(beanElement.dataset.potIndex);
+                    if (!isNaN(potIndex)) {
+                        setTimeout(() => {
+                            this.checkAndSpawnBeans(potIndex);
+                        }, 500 + Math.random() * 1000); // 0.5-1.5 second delay
+                    }
+                    
+                }, duration * 1000);
+            }
+
+            // Add money to player's total
+            addMoney(amount) {
+                this.currentMoney += amount;
+                this.updateMoneyDisplay();
+            }
+
+            // Show satisfying money burst effect
+            showMoneyBurst(x, y, amount) {
+                const burst = document.createElement('div');
+                burst.className = 'money-burst';
+                burst.textContent = `+$${amount.toLocaleString()}`;
+                burst.style.left = (x - 50) + 'px'; // Center the text
+                burst.style.top = (y - 10) + 'px';
+                
+                document.body.appendChild(burst);
+                
+                // Remove burst after animation
+                setTimeout(() => {
+                    burst.remove();
+                }, 1500);
+            }
+
             // Initialize plant data
             initializePlantData() {
                 return [
                     // Common Plants
-                    { name: 'Beanstalk', type: 'Picker', growthTime: 60, buyPrice: 50, sellPrice: 80, rarity: 'Common', availability: 8 },
+                    { name: 'Beanstalk', type: 'Picker', growthTime: 25, buyPrice: 50, sellPrice: 80, rarity: 'Common', availability: 8 },
                     { name: 'Snap Pea', type: 'Picker', growthTime: 75, buyPrice: 90, sellPrice: 145, rarity: 'Common', availability: 7 },
                     { name: 'Jellybean Vine', type: 'Picker', growthTime: 90, buyPrice: 170, sellPrice: 285, rarity: 'Common', availability: 6 },
                     { name: 'Bamboo-Bean', type: 'Cutter', growthTime: 120, buyPrice: 300, sellPrice: 510, rarity: 'Common', availability: 6 },
