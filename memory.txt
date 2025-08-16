@@ -1,0 +1,14 @@
+HACKATHON PROJECT FIXES - RUN.PY
+
+Fixed Issue: Run.py was failing due to missing Flask installation
+Solution Applied:
+1. Activated CORRECT virtual environment (source .venv/bin/activate)
+2. Installed Flask==2.3.3 directly in .venv environment 
+3. Successfully started Flask server on http://localhost:5000
+
+Status: ✅ Run.py is now working properly
+Server accessible at: http://localhost:5000
+Dependencies: Flask and all required packages now installed in .venv
+
+Important: Must use .venv/bin/activate (not bin/activate)
+Date: Current session

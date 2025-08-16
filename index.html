@@ -201,6 +201,190 @@
         .hidden {
             display: none !important;
         }
+
+        /* UI Container Styles */
+        .ui-container {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .money-display {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border: 4px solid #8B4513;
+            border-radius: 15px;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 4px 8px rgba(0,0,0,0.3),
+                inset 0 2px 4px rgba(255,255,255,0.4),
+                inset 0 -2px 4px rgba(0,0,0,0.2);
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 24px;
+            color: #4A4A4A;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+            animation: moneyGlow 3s ease-in-out infinite alternate;
+            min-width: 150px;
+            pointer-events: none;
+        }
+
+        .shop-button {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            border: 4px solid #1B5E20;
+            border-radius: 15px;
+            padding: 12px 24px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 20px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            cursor: pointer;
+            box-shadow: 
+                0 4px 8px rgba(0,0,0,0.3),
+                inset 0 2px 4px rgba(255,255,255,0.2),
+                inset 0 -2px 4px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            min-width: 120px;
+            animation: shopGlow 4s ease-in-out infinite alternate;
+        }
+
+        .shop-button:hover {
+            background: linear-gradient(135deg, #66BB6A, #388E3C);
+            transform: translateY(-2px);
+            box-shadow: 
+                0 6px 12px rgba(0,0,0,0.4),
+                inset 0 2px 4px rgba(255,255,255,0.3),
+                inset 0 -2px 4px rgba(0,0,0,0.3);
+        }
+
+        .shop-button:active {
+            transform: translateY(0px);
+            box-shadow: 
+                0 2px 4px rgba(0,0,0,0.3),
+                inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .inventory-button {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            border: 4px solid #0D47A1;
+            border-radius: 15px;
+            padding: 12px 24px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 20px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            cursor: pointer;
+            box-shadow: 
+                0 4px 8px rgba(0,0,0,0.3),
+                inset 0 2px 4px rgba(255,255,255,0.2),
+                inset 0 -2px 4px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            min-width: 120px;
+            animation: inventoryGlow 5s ease-in-out infinite alternate;
+        }
+
+        .inventory-button:hover {
+            background: linear-gradient(135deg, #42A5F5, #1E88E5);
+            transform: translateY(-2px);
+            box-shadow: 
+                0 6px 12px rgba(0,0,0,0.4),
+                inset 0 2px 4px rgba(255,255,255,0.3),
+                inset 0 -2px 4px rgba(0,0,0,0.3);
+        }
+
+        .inventory-button:active {
+            transform: translateY(0px);
+            box-shadow: 
+                0 2px 4px rgba(0,0,0,0.3),
+                inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .money-amount {
+            letter-spacing: 1px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        @keyframes moneyGlow {
+            0% {
+                box-shadow: 
+                    0 4px 8px rgba(0,0,0,0.3),
+                    inset 0 2px 4px rgba(255,255,255,0.4),
+                    inset 0 -2px 4px rgba(0,0,0,0.2),
+                    0 0 15px rgba(255, 215, 0, 0.6);
+            }
+            100% {
+                box-shadow: 
+                    0 4px 8px rgba(0,0,0,0.3),
+                    inset 0 2px 4px rgba(255,255,255,0.4),
+                    inset 0 -2px 4px rgba(0,0,0,0.2),
+                    0 0 25px rgba(255, 215, 0, 0.9);
+            }
+        }
+
+        @keyframes shopGlow {
+            0% {
+                box-shadow: 
+                    0 4px 8px rgba(0,0,0,0.3),
+                    inset 0 2px 4px rgba(255,255,255,0.2),
+                    inset 0 -2px 4px rgba(0,0,0,0.3),
+                    0 0 10px rgba(76, 175, 80, 0.4);
+            }
+            100% {
+                box-shadow: 
+                    0 4px 8px rgba(0,0,0,0.3),
+                    inset 0 2px 4px rgba(255,255,255,0.2),
+                    inset 0 -2px 4px rgba(0,0,0,0.3),
+                    0 0 20px rgba(76, 175, 80, 0.7);
+            }
+        }
+
+        @keyframes inventoryGlow {
+            0% {
+                box-shadow: 
+                    0 4px 8px rgba(0,0,0,0.3),
+                    inset 0 2px 4px rgba(255,255,255,0.2),
+                    inset 0 -2px 4px rgba(0,0,0,0.3),
+                    0 0 10px rgba(33, 150, 243, 0.4);
+            }
+            100% {
+                box-shadow: 
+                    0 4px 8px rgba(0,0,0,0.3),
+                    inset 0 2px 4px rgba(255,255,255,0.2),
+                    inset 0 -2px 4px rgba(0,0,0,0.3),
+                    0 0 20px rgba(33, 150, 243, 0.7);
+            }
+        }
+
+        /* Money change animation */
+        .money-amount.changing {
+            animation: moneyChange 0.5s ease-in-out;
+        }
+
+        @keyframes moneyChange {
+            0% { 
+                transform: scale(1);
+                color: #4A4A4A;
+            }
+            50% { 
+                transform: scale(1.2);
+                color: #FF6B35;
+                text-shadow: 0 0 8px rgba(255, 107, 53, 0.8);
+            }
+            100% { 
+                transform: scale(1);
+                color: #4A4A4A;
+            }
+        }
     </style>
 </head>
 <body>
@@ -221,6 +405,15 @@
         </div>
 
         <div class="grass-container"></div>
+
+        <!-- UI Container -->
+        <div class="ui-container" id="uiContainer">
+            <div class="money-display">
+                <span class="money-amount" id="moneyAmount">$1,234</span>
+            </div>
+            <button class="shop-button" id="shopButton">Shop</button>
+            <button class="inventory-button" id="inventoryButton">Inventory</button>
+        </div>
     </div>
 
     <script>
@@ -230,6 +423,10 @@
                 this.clouds = [];
                 this.pots = [];
                 this.gameState = null;
+                this.currentMoney = 1234;
+                this.plantData = this.initializePlantData();
+                this.modifierData = this.initializeModifierData();
+                this.playerInventory = [];
                 this.init();
             }
 
@@ -237,11 +434,18 @@
                 this.setupEventListeners();
                 this.createPots();
                 this.startCloudAnimation();
+                this.startMoneyDemo();
             }
 
             setupEventListeners() {
                 const startButton = document.getElementById('startButton');
                 startButton.addEventListener('click', () => this.startGame());
+                
+                const shopButton = document.getElementById('shopButton');
+                shopButton.addEventListener('click', () => this.onShopClick());
+                
+                const inventoryButton = document.getElementById('inventoryButton');
+                inventoryButton.addEventListener('click', () => this.onInventoryClick());
             }
 
             async startGame() {
@@ -425,6 +629,121 @@
                         }
                     }
                 }, duration * 1000);
+            }
+
+            // Money Management Methods
+            updateMoneyDisplay() {
+                const moneyElement = document.getElementById('moneyAmount');
+                if (moneyElement) {
+                    // Add changing animation
+                    moneyElement.classList.add('changing');
+                    
+                    // Format money with commas
+                    const formattedMoney = '$' + this.currentMoney.toLocaleString();
+                    moneyElement.textContent = formattedMoney;
+                    
+                    // Remove animation class after animation completes
+                    setTimeout(() => {
+                        moneyElement.classList.remove('changing');
+                    }, 500);
+                }
+            }
+
+            startMoneyDemo() {
+                // Update money display initially
+                this.updateMoneyDisplay();
+                
+                // Start random money changes for demo
+                setInterval(() => {
+                    // Random change between -500 to +1000
+                    const change = Math.floor(Math.random() * 1500) - 500;
+                    this.currentMoney = Math.max(0, this.currentMoney + change);
+                    this.updateMoneyDisplay();
+                }, 2000); // Change every 2 seconds
+
+                // Occasional bigger changes
+                setInterval(() => {
+                    if (Math.random() > 0.7) { // 30% chance
+                        const bigChange = Math.floor(Math.random() * 5000) - 2000;
+                        this.currentMoney = Math.max(0, this.currentMoney + bigChange);
+                        this.updateMoneyDisplay();
+                    }
+                }, 5000); // Check every 5 seconds
+            }
+
+            // Update money from game state (for later use)
+            updateMoneyFromGameState() {
+                if (this.gameState && this.gameState.coins !== undefined) {
+                    this.currentMoney = this.gameState.coins;
+                    this.updateMoneyDisplay();
+                }
+            }
+
+            // Shop functionality
+            onShopClick() {
+                console.log('Shop button clicked!');
+                console.log('Available plants:', this.plantData);
+                // TODO: Implement shop modal/interface
+                alert('Shop coming soon!\n\nHere you\'ll be able to buy:\n• Seeds to plant\n• Upgrades for faster growth\n• Special fertilizers\n• And more!');
+            }
+
+            // Inventory functionality
+            onInventoryClick() {
+                console.log('Inventory button clicked!');
+                console.log('Player inventory:', this.playerInventory);
+                console.log('Modifier data:', this.modifierData);
+                // TODO: Implement inventory modal/interface
+                let inventoryText = 'Inventory (Coming Soon!)\n\n';
+                inventoryText += `Items in inventory: ${this.playerInventory.length}\n\n`;
+                inventoryText += 'Features:\n• View all your plants\n• Apply size & finish modifiers\n• Track growth progress\n• Organize your collection';
+                alert(inventoryText);
+            }
+
+            // Initialize plant data
+            initializePlantData() {
+                return [
+                    // Common Plants
+                    { name: 'Beanstalk', type: 'Picker', growthTime: 60, buyPrice: 50, sellPrice: 80, rarity: 'Common', availability: 8 },
+                    { name: 'Snap Pea', type: 'Picker', growthTime: 75, buyPrice: 90, sellPrice: 145, rarity: 'Common', availability: 7 },
+                    { name: 'Jellybean Vine', type: 'Picker', growthTime: 90, buyPrice: 170, sellPrice: 285, rarity: 'Common', availability: 6 },
+                    { name: 'Bamboo-Bean', type: 'Cutter', growthTime: 120, buyPrice: 300, sellPrice: 510, rarity: 'Common', availability: 6 },
+                    { name: 'Coffee Creeper', type: 'Picker', growthTime: 120, buyPrice: 540, sellPrice: 900, rarity: 'Common', availability: 5 },
+                    { name: 'Thunder Pod', type: 'Cutter', growthTime: 150, buyPrice: 970, sellPrice: 1700, rarity: 'Common', availability: 4 },
+                    { name: 'Frost Pea', type: 'Picker', growthTime: 150, buyPrice: 1700, sellPrice: 3000, rarity: 'Common', availability: 3 },
+                    { name: 'Choco Vine', type: 'Picker', growthTime: 180, buyPrice: 3000, sellPrice: 5200, rarity: 'Common', availability: 2 },
+                    
+                    // Uncommon Plants
+                    { name: 'Ironvine', type: 'Cutter', growthTime: 210, buyPrice: 5300, sellPrice: 9000, rarity: 'Uncommon', availability: 7 },
+                    { name: 'Honeyvine', type: 'Picker', growthTime: 180, buyPrice: 9300, sellPrice: 18000, rarity: 'Uncommon', availability: 6 },
+                    { name: 'Sunbean', type: 'Picker', growthTime: 240, buyPrice: 16000, sellPrice: 30000, rarity: 'Uncommon', availability: 5 },
+                    { name: 'Moonbean', type: 'Picker', growthTime: 240, buyPrice: 28000, sellPrice: 53000, rarity: 'Uncommon', availability: 4 },
+                    { name: 'Cloud Creeper', type: 'Picker', growthTime: 270, buyPrice: 49000, sellPrice: 95000, rarity: 'Uncommon', availability: 3 },
+                    { name: 'Royal Stalk', type: 'Cutter', growthTime: 300, buyPrice: 86000, sellPrice: 165000, rarity: 'Uncommon', availability: 2 },
+                    { name: 'Crystal Bean', type: 'Picker', growthTime: 300, buyPrice: 150000, sellPrice: 300000, rarity: 'Uncommon', availability: 1 },
+                    
+                    // Rare Plants
+                    { name: 'Neon Soy', type: 'Cutter', growthTime: 330, buyPrice: 260000, sellPrice: 570000, rarity: 'Rare', availability: 5 },
+                    { name: 'Vinecorn', type: 'Cutter', growthTime: 240, buyPrice: 450000, sellPrice: 1000000, rarity: 'Rare', availability: 4 },
+                    { name: 'Fire Pod', type: 'Cutter', growthTime: 360, buyPrice: 780000, sellPrice: 1800000, rarity: 'Rare', availability: 3 },
+                    { name: 'Shadow Bean', type: 'Picker', growthTime: 300, buyPrice: 1350000, sellPrice: 3182000, rarity: 'Rare', availability: 2 },
+                    { name: 'Prism Stalk', type: 'Picker', growthTime: 480, buyPrice: 2340000, sellPrice: 5620000, rarity: 'Rare', availability: 1 }
+                ];
+            }
+
+            // Initialize modifier data
+            initializeModifierData() {
+                return {
+                    size: [
+                        { name: 'Normal', multiplier: 1.0, probability: 65, description: 'Standard size' },
+                        { name: 'Large', multiplier: 1.8, probability: 30, description: '×1.8 size boost' },
+                        { name: 'Massive', multiplier: 3.2, probability: 5, description: '×3.2 size boost' }
+                    ],
+                    finish: [
+                        { name: 'None', multiplier: 1.0, probability: 95, description: 'No special finish' },
+                        { name: 'Shiny', multiplier: 1.5, probability: 3, description: '×1.5 value boost' },
+                        { name: 'Golden', multiplier: 2.0, probability: 2, description: '×2.0 value boost' }
+                    ]
+                };
             }
         }
 
