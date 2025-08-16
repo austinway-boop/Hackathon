@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grow A Beanstock</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            background: #87CEEB;
+        }
+
+        .start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+        }
+
+        .start-screen h1 {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .start-button {
+            padding: 20px 40px;
+            font-size: 2rem;
+            background: #FFA726;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .start-button:hover {
+            background: #FF9800;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: none;
+        }
+
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('Assets/background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 1;
+        }
+
+        .clouds-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .cloud {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .grass-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 250px;
+            background-image: url('Assets/grass.png');
+            background-repeat: repeat-x;
+            background-position: bottom;
+            background-size: auto 250px;
+            z-index: 4;
+        }
+
+        .pots-container {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 15px;
+            z-index: 3;
+            width: 95%;
+            max-width: 1400px;
+            height: 120px;
+        }
+
+        .pot {
+            background-image: url('Assets/pot.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center bottom;
+            width: 100px;
+            height: 100px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .pot:hover {
+            transform: scale(1.15) translateY(-5px);
+            filter: drop-shadow(4px 4px 8px rgba(0,0,0,0.4));
+        }
+
+        .pot.ready {
+            animation: readyGlow 2s ease-in-out infinite alternate;
+        }
+
+        .pot.growing {
+            filter: drop-shadow(0 0 8px rgba(76, 175, 80, 0.6));
+        }
+
+        @keyframes readyGlow {
+            from {
+                filter: drop-shadow(0 0 15px gold) drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+            }
+            to {
+                filter: drop-shadow(0 0 25px orange) drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+            }
+        }
+
+        @keyframes cloudMoveRight {
+            0% {
+                transform: translateX(-200px) scale(var(--start-scale)) translateY(0px);
+            }
+            25% {
+                transform: translateX(25vw) scale(var(--mid-scale)) translateY(var(--drift-1));
+            }
+            50% {
+                transform: translateX(50vw) scale(var(--end-scale)) translateY(var(--drift-2));
+            }
+            75% {
+                transform: translateX(75vw) scale(var(--mid-scale)) translateY(var(--drift-1));
+            }
+            100% {
+                transform: translateX(calc(100vw + 200px)) scale(var(--start-scale)) translateY(0px);
+            }
+        }
+
+        @keyframes cloudMoveLeft {
+            0% {
+                transform: translateX(calc(100vw + 200px)) scale(var(--start-scale)) translateY(0px);
+            }
+            25% {
+                transform: translateX(75vw) scale(var(--mid-scale)) translateY(var(--drift-1));
+            }
+            50% {
+                transform: translateX(50vw) scale(var(--end-scale)) translateY(var(--drift-2));
+            }
+            75% {
+                transform: translateX(25vw) scale(var(--mid-scale)) translateY(var(--drift-1));
+            }
+            100% {
+                transform: translateX(-200px) scale(var(--start-scale)) translateY(0px);
+            }
+        }
+
+        .cloud.moving-right {
+            animation: cloudMoveRight linear infinite;
+        }
+
+        .cloud.moving-left {
+            animation: cloudMoveLeft linear infinite;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="start-screen" id="startScreen">
+        <h1>🌱 Grow A Beanstock 🌱</h1>
+        <button class="start-button" id="startButton">Start Growing!</button>
+    </div>
+
+    <div class="game-container" id="gameContainer">
+        <div class="background"></div>
+        
+        <div class="clouds-container" id="cloudsContainer">
+            <!-- Clouds will be dynamically added here -->
+        </div>
+
+        <div class="pots-container" id="potsContainer">
+            <!-- 12 pots will be dynamically added here -->
+        </div>
+
+        <div class="grass-container"></div>
+    </div>
+
+    <script>
+        class GameManager {
+            constructor() {
+                this.isFullscreen = false;
+                this.clouds = [];
+                this.pots = [];
+                this.gameState = null;
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.createPots();
+                this.startCloudAnimation();
+            }
+
+            setupEventListeners() {
+                const startButton = document.getElementById('startButton');
+                startButton.addEventListener('click', () => this.startGame());
+            }
+
+            async startGame() {
+                try {
+                    // Request fullscreen
+                    await this.enterFullscreen();
+                    
+                    // Hide start screen and show game
+                    document.getElementById('startScreen').classList.add('hidden');
+                    document.getElementById('gameContainer').style.display = 'block';
+                    
+                    // Load initial game state
+                    await this.loadGameState();
+                    
+                } catch (error) {
+                    console.warn('Fullscreen not supported or denied, continuing anyway');
+                    // Still start the game even if fullscreen fails
+                    document.getElementById('startScreen').classList.add('hidden');
+                    document.getElementById('gameContainer').style.display = 'block';
+                    
+                    // Load initial game state
+                    await this.loadGameState();
+                }
+            }
+
+            async enterFullscreen() {
+                const element = document.documentElement;
+                
+                if (element.requestFullscreen) {
+                    await element.requestFullscreen();
+                } else if (element.webkitRequestFullscreen) {
+                    await element.webkitRequestFullscreen();
+                } else if (element.msRequestFullscreen) {
+                    await element.msRequestFullscreen();
+                } else if (element.mozRequestFullScreen) {
+                    await element.mozRequestFullScreen();
+                }
+                
+                this.isFullscreen = true;
+            }
+
+            async loadGameState() {
+                try {
+                    const response = await fetch('/api/game-state');
+                    this.gameState = await response.json();
+                    this.updatePotVisuals();
+                    console.log('Game state loaded:', this.gameState);
+                } catch (error) {
+                    console.error('Failed to load game state:', error);
+                }
+            }
+
+            createPots() {
+                const potsContainer = document.getElementById('potsContainer');
+                
+                for (let i = 0; i < 12; i++) {
+                    const pot = document.createElement('div');
+                    pot.className = 'pot';
+                    pot.dataset.potIndex = i;
+                    pot.addEventListener('click', () => this.onPotClick(i));
+                    
+                    potsContainer.appendChild(pot);
+                    this.pots.push({
+                        element: pot,
+                        index: i,
+                        state: 'empty'
+                    });
+                }
+            }
+
+            updatePotVisuals() {
+                if (!this.gameState || !this.gameState.pots) return;
+                
+                this.gameState.pots.forEach((potData, index) => {
+                    const potElement = this.pots[index].element;
+                    potElement.className = `pot ${potData.state}`;
+                    
+                    // Update pot data
+                    this.pots[index].state = potData.state;
+                    this.pots[index].data = potData;
+                });
+            }
+
+            async onPotClick(index) {
+                console.log(`Pot ${index} clicked!`);
+                const potData = this.pots[index].data;
+                
+                if (potData && potData.state === 'ready') {
+                    // TODO: Implement harvest logic
+                    console.log(`Harvesting pot ${index}`);
+                } else if (potData && potData.state === 'empty') {
+                    // TODO: Show shop to buy seeds
+                    console.log(`Pot ${index} is empty - show shop`);
+                } else if (potData && potData.state === 'growing') {
+                    // Show growth progress
+                    console.log(`Pot ${index} is growing...`);
+                }
+                
+                // Refresh game state
+                await this.loadGameState();
+            }
+
+            startCloudAnimation() {
+                // Create initial clouds
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => this.createCloud(), i * 2000);
+                }
+                
+                // Create new clouds more frequently
+                setInterval(() => {
+                    if (Math.random() > 0.4) { // 60% chance every interval
+                        this.createCloud();
+                    }
+                }, 2000); // Check every 2 seconds
+                
+                // Additional cloud bursts occasionally
+                setInterval(() => {
+                    if (Math.random() > 0.8) { // 20% chance for burst
+                        for (let i = 0; i < 2; i++) {
+                            setTimeout(() => this.createCloud(), i * 1000);
+                        }
+                    }
+                }, 8000); // Check every 8 seconds
+            }
+
+            createCloud() {
+                const cloudsContainer = document.getElementById('cloudsContainer');
+                const cloud = document.createElement('div');
+                
+                // Randomly choose between cloud.png and cloud2.png
+                const cloudAsset = Math.random() > 0.5 ? 'cloud.png' : 'cloud2.png';
+                cloud.style.backgroundImage = `url('Assets/${cloudAsset}')`;
+                cloud.style.backgroundSize = 'contain';
+                cloud.style.backgroundRepeat = 'no-repeat';
+                cloud.style.position = 'absolute';
+                cloud.style.width = '200px';
+                cloud.style.height = '100px';
+                
+                // Random direction (left to right or right to left)
+                const direction = Math.random() > 0.5 ? 'right' : 'left';
+                cloud.className = `cloud moving-${direction}`;
+                
+                // Random vertical position (anywhere on screen, avoiding bottom 250px for grass/pots)
+                const topPosition = Math.random() * (window.innerHeight - 250);
+                cloud.style.top = `${topPosition}px`;
+                
+                // Set up dynamic scaling variables
+                const startScale = 0.5 + Math.random() * 0.8; // 0.5 to 1.3
+                const midScale = startScale + (Math.random() * 0.6 - 0.3); // ±0.3 variation
+                const endScale = startScale + (Math.random() * 0.4 - 0.2); // ±0.2 variation
+                
+                // Set up drift variables for vertical movement
+                const drift1 = (Math.random() * 40 - 20) + 'px'; // ±20px
+                const drift2 = (Math.random() * 60 - 30) + 'px'; // ±30px
+                
+                // Apply CSS variables
+                cloud.style.setProperty('--start-scale', startScale);
+                cloud.style.setProperty('--mid-scale', Math.max(0.3, midScale));
+                cloud.style.setProperty('--end-scale', Math.max(0.3, endScale));
+                cloud.style.setProperty('--drift-1', drift1);
+                cloud.style.setProperty('--drift-2', drift2);
+                
+                // Random opacity variation
+                const opacity = 0.3 + Math.random() * 0.5; // 0.3 to 0.8
+                cloud.style.opacity = opacity;
+                
+                // Random animation duration (20-45 seconds)
+                const duration = 20 + Math.random() * 25;
+                cloud.style.animationDuration = `${duration}s`;
+                
+                cloudsContainer.appendChild(cloud);
+                this.clouds.push(cloud);
+                
+                // Remove cloud after animation completes
+                setTimeout(() => {
+                    if (cloud.parentNode) {
+                        cloud.parentNode.removeChild(cloud);
+                        const index = this.clouds.indexOf(cloud);
+                        if (index > -1) {
+                            this.clouds.splice(index, 1);
+                        }
+                    }
+                }, duration * 1000);
+            }
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            window.gameManager = new GameManager();
+        });
+
+        // Handle escape key to exit fullscreen
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && window.gameManager && window.gameManager.isFullscreen) {
+                document.exitFullscreen();
+                window.gameManager.isFullscreen = false;
+            }
+        });
+    </script>
+</body>
+</html>
