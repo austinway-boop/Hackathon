@@ -102,7 +102,8 @@
             background-repeat: repeat-x;
             background-position: bottom;
             background-size: auto 250px;
-            z-index: 4;
+            z-index: 6;
+            pointer-events: none;
         }
 
         .pots-container {
@@ -114,7 +115,7 @@
             justify-content: center;
             align-items: flex-end;
             gap: 15px;
-            z-index: 3;
+            z-index: 5;
             width: 95%;
             max-width: 1400px;
             height: 120px;
@@ -135,6 +136,12 @@
         .pot:hover {
             transform: scale(1.15) translateY(-5px);
             filter: drop-shadow(4px 4px 8px rgba(0,0,0,0.4));
+        }
+
+        .pot.drag-hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 10px rgba(76, 175, 80, 0.6));
+            transition: all 0.2s ease;
         }
 
         .pot.ready {
@@ -477,15 +484,16 @@
             background: linear-gradient(135deg, #4A5A6A, #34495E);
             border: 2px solid #52708A;
             border-radius: 10px;
-            padding: 15px;
+            padding: 10px;
             text-align: center;
             transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
-            min-height: 100px;
+            min-height: 110px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: center;
+            align-items: center;
         }
 
         .inventory-item:hover {
@@ -494,60 +502,70 @@
             border-color: #3498DB;
         }
 
-        .inventory-item.seed {
-            background: linear-gradient(135deg, #27AE60, #229954);
-            border-color: #1E8449;
-        }
 
-        .inventory-item.seed:hover {
-            box-shadow: 0 6px 15px rgba(39, 174, 96, 0.3);
-            border-color: #27AE60;
-        }
 
         .inventory-item-icon {
-            font-size: 32px;
-            margin-bottom: 8px;
+            width: 80px;
+            height: 80px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 0 auto;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
         }
 
-        .inventory-item-name {
-            color: white;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-            margin-bottom: 5px;
+        .inventory-item.rarity-common .inventory-item-icon {
+            filter: drop-shadow(0 0 8px rgba(149, 165, 166, 0.7)) drop-shadow(0 0 16px rgba(149, 165, 166, 0.4));
+        }
+
+        .inventory-item.rarity-uncommon .inventory-item-icon {
+            filter: drop-shadow(0 0 8px rgba(52, 152, 219, 0.7)) drop-shadow(0 0 16px rgba(52, 152, 219, 0.4));
+        }
+
+        .inventory-item.rarity-rare .inventory-item-icon {
+            filter: drop-shadow(0 0 8px rgba(155, 89, 182, 0.7)) drop-shadow(0 0 16px rgba(155, 89, 182, 0.4));
+        }
+
+        .inventory-item.rarity-legendary .inventory-item-icon {
+            filter: drop-shadow(0 0 8px rgba(243, 156, 18, 0.8)) drop-shadow(0 0 16px rgba(243, 156, 18, 0.5)) drop-shadow(0 0 24px rgba(243, 156, 18, 0.3));
+        }
+
+        .inventory-item:hover .inventory-item-icon {
+            transform: scale(1.15);
+        }
+
+        .inventory-item:hover.rarity-common .inventory-item-icon {
+            filter: drop-shadow(0 0 12px rgba(149, 165, 166, 0.9)) drop-shadow(0 0 24px rgba(149, 165, 166, 0.6));
+        }
+
+        .inventory-item:hover.rarity-uncommon .inventory-item-icon {
+            filter: drop-shadow(0 0 12px rgba(52, 152, 219, 0.9)) drop-shadow(0 0 24px rgba(52, 152, 219, 0.6));
+        }
+
+        .inventory-item:hover.rarity-rare .inventory-item-icon {
+            filter: drop-shadow(0 0 12px rgba(155, 89, 182, 0.9)) drop-shadow(0 0 24px rgba(155, 89, 182, 0.6));
+        }
+
+        .inventory-item:hover.rarity-legendary .inventory-item-icon {
+            filter: drop-shadow(0 0 12px rgba(243, 156, 18, 1.0)) drop-shadow(0 0 24px rgba(243, 156, 18, 0.7)) drop-shadow(0 0 36px rgba(243, 156, 18, 0.4));
         }
 
         .inventory-item-quantity {
-            color: #BDC3C7;
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
             font-family: 'Courier New', monospace;
             font-size: 12px;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-        }
-
-        .inventory-item-rarity {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .rarity-common {
-            background: #95A5A6;
-        }
-
-        .rarity-uncommon {
-            background: #3498DB;
-        }
-
-        .rarity-rare {
-            background: #9B59B6;
-        }
-
-        .rarity-legendary {
-            background: #F39C12;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         /* Empty inventory message */
@@ -563,6 +581,248 @@
         .inventory-empty-icon {
             font-size: 48px;
             margin-bottom: 15px;
+        }
+
+        /* Drag and Drop Styles */
+        .dragging-seed {
+            position: fixed;
+            width: 80px;
+            height: 80px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            border-radius: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.9;
+            transform: translate(-50%, -50%);
+            transition: none;
+        }
+
+        .dragging-seed.rarity-common {
+            filter: drop-shadow(0 0 10px rgba(149, 165, 166, 0.9)) drop-shadow(0 0 20px rgba(149, 165, 166, 0.6));
+        }
+
+        .dragging-seed.rarity-uncommon {
+            filter: drop-shadow(0 0 10px rgba(52, 152, 219, 0.9)) drop-shadow(0 0 20px rgba(52, 152, 219, 0.6));
+        }
+
+        .dragging-seed.rarity-rare {
+            filter: drop-shadow(0 0 10px rgba(155, 89, 182, 0.9)) drop-shadow(0 0 20px rgba(155, 89, 182, 0.6));
+        }
+
+        .dragging-seed.rarity-legendary {
+            filter: drop-shadow(0 0 10px rgba(243, 156, 18, 1.0)) drop-shadow(0 0 20px rgba(243, 156, 18, 0.8)) drop-shadow(0 0 30px rgba(243, 156, 18, 0.5));
+        }
+
+        .inventory-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.9);
+        }
+
+        .dragging-seed.pouring {
+            transform: translate(-50%, -50%) rotate(45deg);
+            transition: transform 0.2s ease;
+        }
+
+        /* Shop Panel Styles */
+        .shop-panel {
+            position: fixed;
+            top: 0;
+            left: -450px;
+            width: 450px;
+            height: 100vh;
+            background: linear-gradient(135deg, #2C3E50, #34495E);
+            border-right: 4px solid #4CAF50;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+            z-index: 20;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .shop-panel.active {
+            left: 0;
+        }
+
+        .shop-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 15;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .shop-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .shop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            border-bottom: 3px solid #1B5E20;
+            position: sticky;
+            top: 0;
+            z-index: 21;
+        }
+
+        .shop-header h2 {
+            color: white;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            margin: 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .shop-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .shop-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .shop-content {
+            padding: 20px;
+        }
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .shop-item {
+            background: linear-gradient(135deg, #4A5A6A, #34495E);
+            border: 2px solid #52708A;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .shop-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(76, 175, 80, 0.3);
+            border-color: #4CAF50;
+        }
+
+
+
+        .shop-item-icon {
+            width: 90px;
+            height: 90px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 0 auto 10px auto;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .shop-item.rarity-common .shop-item-icon {
+            filter: drop-shadow(0 0 8px rgba(149, 165, 166, 0.7)) drop-shadow(0 0 16px rgba(149, 165, 166, 0.4));
+        }
+
+        .shop-item.rarity-uncommon .shop-item-icon {
+            filter: drop-shadow(0 0 8px rgba(52, 152, 219, 0.7)) drop-shadow(0 0 16px rgba(52, 152, 219, 0.4));
+        }
+
+        .shop-item.rarity-rare .shop-item-icon {
+            filter: drop-shadow(0 0 8px rgba(155, 89, 182, 0.7)) drop-shadow(0 0 16px rgba(155, 89, 182, 0.4));
+        }
+
+        .shop-item.rarity-legendary .shop-item-icon {
+            filter: drop-shadow(0 0 8px rgba(243, 156, 18, 0.8)) drop-shadow(0 0 16px rgba(243, 156, 18, 0.5)) drop-shadow(0 0 24px rgba(243, 156, 18, 0.3));
+        }
+
+        .shop-item.available:hover .shop-item-icon {
+            transform: scale(1.15);
+        }
+
+        .shop-item.available:hover.rarity-common .shop-item-icon {
+            filter: drop-shadow(0 0 12px rgba(149, 165, 166, 0.9)) drop-shadow(0 0 24px rgba(149, 165, 166, 0.6));
+        }
+
+        .shop-item.available:hover.rarity-uncommon .shop-item-icon {
+            filter: drop-shadow(0 0 12px rgba(52, 152, 219, 0.9)) drop-shadow(0 0 24px rgba(52, 152, 219, 0.6));
+        }
+
+        .shop-item.available:hover.rarity-rare .shop-item-icon {
+            filter: drop-shadow(0 0 12px rgba(155, 89, 182, 0.9)) drop-shadow(0 0 24px rgba(155, 89, 182, 0.6));
+        }
+
+        .shop-item.available:hover.rarity-legendary .shop-item-icon {
+            filter: drop-shadow(0 0 12px rgba(243, 156, 18, 1.0)) drop-shadow(0 0 24px rgba(243, 156, 18, 0.7)) drop-shadow(0 0 36px rgba(243, 156, 18, 0.4));
+        }
+
+        .shop-item.unavailable .shop-item-icon {
+            filter: drop-shadow(0 0 6px rgba(127, 140, 141, 0.4));
+            opacity: 0.5;
+        }
+
+        .shop-item-price {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #4A4A4A;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 2px solid #8B4513;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+
+
+        .shop-item.unavailable {
+            opacity: 0.6;
+            background: linear-gradient(135deg, #7F8C8D, #95A5A6);
+            border-color: #BDC3C7;
+            cursor: not-allowed;
+        }
+
+        .shop-item.unavailable:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: #BDC3C7;
+        }
+
+        .shop-item-unavailable {
+            color: #E74C3C;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
@@ -609,6 +869,22 @@
         
         <!-- Inventory Overlay -->
         <div class="inventory-overlay" id="inventoryOverlay"></div>
+        
+        <!-- Shop Panel -->
+        <div class="shop-panel" id="shopPanel">
+            <div class="shop-header">
+                <h2>🏪 Seed Shop</h2>
+                <button class="shop-close" id="shopClose">×</button>
+            </div>
+            <div class="shop-content">
+                <div class="shop-grid" id="shopGrid">
+                    <!-- Shop items will be populated here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Shop Overlay -->
+        <div class="shop-overlay" id="shopOverlay"></div>
     </div>
 
     <script>
@@ -623,6 +899,12 @@
                 this.modifierData = this.initializeModifierData();
                 this.playerInventory = [];
                 this.isInventoryOpen = false;
+                this.isShopOpen = false;
+                this.shopInventory = [];
+                this.isDragging = false;
+                this.draggedItem = null;
+                this.dragElement = null;
+                this.hoveredPot = null;
                 this.init();
             }
 
@@ -648,6 +930,16 @@
                 
                 const inventoryOverlay = document.getElementById('inventoryOverlay');
                 inventoryOverlay.addEventListener('click', () => this.closeInventory());
+                
+                const shopClose = document.getElementById('shopClose');
+                shopClose.addEventListener('click', () => this.closeShop());
+                
+                const shopOverlay = document.getElementById('shopOverlay');
+                shopOverlay.addEventListener('click', () => this.closeShop());
+                
+                // Add global drag event listeners
+                document.addEventListener('mousemove', (e) => this.onMouseMove(e));
+                document.addEventListener('mouseup', (e) => this.onMouseUp(e));
             }
 
             async startGame() {
@@ -884,9 +1176,140 @@
             // Shop functionality
             onShopClick() {
                 console.log('Shop button clicked!');
-                console.log('Available plants:', this.plantData);
-                // TODO: Implement shop modal/interface
-                alert('Shop coming soon!\n\nHere you\'ll be able to buy:\n• Seeds to plant\n• Upgrades for faster growth\n• Special fertilizers\n• And more!');
+                this.toggleShop();
+            }
+
+            toggleShop() {
+                if (this.isShopOpen) {
+                    this.closeShop();
+                } else {
+                    this.openShop();
+                }
+            }
+
+            openShop() {
+                this.isShopOpen = true;
+                document.getElementById('shopPanel').classList.add('active');
+                document.getElementById('shopOverlay').classList.add('active');
+                this.populateShop();
+                console.log('Shop opened');
+            }
+
+            closeShop() {
+                this.isShopOpen = false;
+                document.getElementById('shopPanel').classList.remove('active');
+                document.getElementById('shopOverlay').classList.remove('active');
+                console.log('Shop closed');
+            }
+
+            populateShop() {
+                const shopGrid = document.getElementById('shopGrid');
+                shopGrid.innerHTML = '';
+
+                // Initialize shop inventory if empty
+                if (this.shopInventory.length === 0) {
+                    this.createShopInventory();
+                }
+
+                // Populate the grid with shop items
+                this.shopInventory.forEach(item => {
+                    const itemElement = this.createShopItemElement(item);
+                    shopGrid.appendChild(itemElement);
+                });
+            }
+
+            createShopInventory() {
+                // Create one of each seed type for the shop
+                this.shopInventory = [
+                    { id: 1, name: 'Beanstalk', type: 'seed', rarity: 'common', price: 50, image: 'Assets/PlantSeeds/Beanstalkseeds.png', available: true },
+                    { id: 2, name: 'Snap Pea', type: 'seed', rarity: 'common', price: 90, image: 'Assets/PlantSeeds/SnappeaSeeds.png', available: true },
+                    { id: 3, name: 'Bamboo Bean', type: 'seed', rarity: 'common', price: 300, image: 'Assets/PlantSeeds/Bamboobeanseeds.png', available: true },
+                    { id: 4, name: 'Jellybean Vine', type: 'seed', rarity: 'common', price: 170, image: 'Assets/PlantSeeds/jellybeanvineseeds.png', available: true },
+                    { id: 5, name: 'Coffee Creeper', type: 'seed', rarity: 'common', price: 540, image: 'Assets/PlantSeeds/coffeebeanstalkseeds.png', available: true },
+                    { id: 6, name: 'Frost Pea', type: 'seed', rarity: 'common', price: 1700, image: 'Assets/PlantSeeds/frostpeaseeds.png', available: true },
+                    { id: 7, name: 'Thunder Pod', type: 'seed', rarity: 'uncommon', price: 970, image: 'Assets/PlantSeeds/thunderpodseeds.png', available: true },
+                    { id: 8, name: 'Choco Vine', type: 'seed', rarity: 'uncommon', price: 3000, image: 'Assets/PlantSeeds/Chocovineseeds.png', available: true },
+                    { id: 9, name: 'Iron Vine', type: 'seed', rarity: 'uncommon', price: 5300, image: 'Assets/PlantSeeds/Ironvineseeds.png', available: true },
+                    { id: 10, name: 'Honey Vine', type: 'seed', rarity: 'uncommon', price: 9300, image: 'Assets/PlantSeeds/Honeyvineseeds.png', available: true },
+                    { id: 11, name: 'Sunbean', type: 'seed', rarity: 'uncommon', price: 16000, image: 'Assets/PlantSeeds/Sunbeanseeds.png', available: true },
+                    { id: 12, name: 'Moonbean', type: 'seed', rarity: 'uncommon', price: 28000, image: 'Assets/PlantSeeds/Moonbeanseeds.png', available: true },
+                    { id: 13, name: 'Cloud Creeper', type: 'seed', rarity: 'uncommon', price: 49000, image: 'Assets/PlantSeeds/Cloudcreeperseeds.png', available: true },
+                    { id: 14, name: 'Royal Stalk', type: 'seed', rarity: 'uncommon', price: 86000, image: 'Assets/PlantSeeds/Royalstalkseeds.png', available: true },
+                    { id: 15, name: 'Crystal Bean', type: 'seed', rarity: 'rare', price: 150000, image: 'Assets/PlantSeeds/CrystalBeanseeds.png', available: true },
+                    { id: 16, name: 'Neon Soy', type: 'seed', rarity: 'rare', price: 260000, image: 'Assets/PlantSeeds/Neonsoyseeds.png', available: true },
+                    { id: 17, name: 'Vinecorn', type: 'seed', rarity: 'rare', price: 450000, image: 'Assets/PlantSeeds/Vinecornseeds.png', available: true },
+                    { id: 18, name: 'Fire Pod', type: 'seed', rarity: 'rare', price: 780000, image: 'Assets/PlantSeeds/Firepodseeds.png', available: true },
+                    { id: 19, name: 'Shadow Bean', type: 'seed', rarity: 'rare', price: 1350000, image: 'Assets/PlantSeeds/Shadowbeanseeds.png', available: true },
+                    { id: 20, name: 'Prism Stalk', type: 'seed', rarity: 'legendary', price: 2340000, image: 'Assets/PlantSeeds/Prismstalkseeds.png', available: true },
+                ];
+            }
+
+            createShopItemElement(item) {
+                const itemDiv = document.createElement('div');
+                const canAfford = this.currentMoney >= item.price;
+                const availabilityClass = item.available && canAfford ? 'available' : 'unavailable';
+                
+                itemDiv.className = `shop-item ${availabilityClass} rarity-${item.rarity}`;
+                itemDiv.onclick = () => this.onShopItemClick(item);
+
+                const priceContent = item.available && canAfford 
+                    ? `<div class="shop-item-price">$${item.price.toLocaleString()}</div>`
+                    : `<div class="shop-item-unavailable">${!canAfford ? 'Too Expensive!' : 'Unavailable'}</div>`;
+
+                itemDiv.innerHTML = `
+                    <div class="shop-item-icon" style="background-image: url('${item.image}')"></div>
+                    ${priceContent}
+                `;
+
+                return itemDiv;
+            }
+
+            onShopItemClick(item) {
+                console.log('Shop item clicked:', item);
+                
+                if (!item.available) {
+                    alert('This item is currently unavailable!');
+                    return;
+                }
+                
+                if (this.currentMoney < item.price) {
+                    alert(`Not enough money!\n\nYou need $${item.price.toLocaleString()} but only have $${this.currentMoney.toLocaleString()}`);
+                    return;
+                }
+                
+                // Confirm purchase
+                const confirmPurchase = confirm(`Purchase ${item.name} for $${item.price.toLocaleString()}?`);
+                
+                if (confirmPurchase) {
+                    this.purchaseItem(item);
+                }
+            }
+
+            purchaseItem(item) {
+                // Deduct money
+                this.currentMoney -= item.price;
+                this.updateMoneyDisplay();
+                
+                // Add to player inventory
+                const existingItem = this.playerInventory.find(invItem => invItem.name === item.name);
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    this.playerInventory.push({
+                        id: Date.now(), // Simple ID generation
+                        name: item.name,
+                        type: item.type,
+                        rarity: item.rarity,
+                        quantity: 1,
+                        image: item.image
+                    });
+                }
+                
+                // Update shop display to reflect affordability changes
+                this.populateShop();
+                
+                console.log(`Purchased ${item.name} for $${item.price}`);
+                alert(`Successfully purchased ${item.name}!\n\nCheck your inventory to see your new seed.`);
             }
 
             // Inventory functionality
@@ -922,7 +1345,7 @@
                 const inventoryGrid = document.getElementById('inventoryGrid');
                 inventoryGrid.innerHTML = '';
 
-                // Add some dummy inventory data if empty
+                // Add some starter inventory data if empty (for demo purposes)
                 if (this.playerInventory.length === 0) {
                     this.createDummyInventoryData();
                 }
@@ -948,35 +1371,49 @@
             }
 
             createDummyInventoryData() {
-                // Add some demo seed data
+                // Add some demo seed data with actual images
                 this.playerInventory = [
-                    { id: 1, name: 'Beanstalk', type: 'seed', rarity: 'common', quantity: 5, icon: '🌱' },
-                    { id: 2, name: 'Snap Pea', type: 'seed', rarity: 'common', quantity: 3, icon: '🥬' },
-                    { id: 3, name: 'Thunder Pod', type: 'seed', rarity: 'uncommon', quantity: 2, icon: '⚡' },
-                    { id: 4, name: 'Moonbean', type: 'seed', rarity: 'uncommon', quantity: 1, icon: '🌙' },
-                    { id: 5, name: 'Crystal Bean', type: 'seed', rarity: 'rare', quantity: 1, icon: '💎' },
-                    { id: 6, name: 'Fire Pod', type: 'seed', rarity: 'rare', quantity: 1, icon: '🔥' },
-                    { id: 7, name: 'Jellybean Vine', type: 'seed', rarity: 'common', quantity: 8, icon: '🍬' },
-                    { id: 8, name: 'Coffee Creeper', type: 'seed', rarity: 'common', quantity: 4, icon: '☕' },
-                    { id: 9, name: 'Golden Stalk', type: 'seed', rarity: 'legendary', quantity: 1, icon: '🏆' },
+                    { id: 1, name: 'Beanstalk', type: 'seed', rarity: 'common', quantity: 5, image: 'Assets/PlantSeeds/Beanstalkseeds.png' },
+                    { id: 2, name: 'Snap Pea', type: 'seed', rarity: 'common', quantity: 3, image: 'Assets/PlantSeeds/SnappeaSeeds.png' },
+                    { id: 3, name: 'Thunder Pod', type: 'seed', rarity: 'uncommon', quantity: 2, image: 'Assets/PlantSeeds/thunderpodseeds.png' },
+                    { id: 4, name: 'Moonbean', type: 'seed', rarity: 'uncommon', quantity: 1, image: 'Assets/PlantSeeds/Moonbeanseeds.png' },
+                    { id: 5, name: 'Crystal Bean', type: 'seed', rarity: 'rare', quantity: 1, image: 'Assets/PlantSeeds/CrystalBeanseeds.png' },
+                    { id: 6, name: 'Fire Pod', type: 'seed', rarity: 'rare', quantity: 1, image: 'Assets/PlantSeeds/Firepodseeds.png' },
+                    { id: 7, name: 'Jellybean Vine', type: 'seed', rarity: 'common', quantity: 8, image: 'Assets/PlantSeeds/jellybeanvineseeds.png' },
+                    { id: 8, name: 'Coffee Creeper', type: 'seed', rarity: 'common', quantity: 4, image: 'Assets/PlantSeeds/coffeebeanstalkseeds.png' },
+                    { id: 9, name: 'Royal Stalk', type: 'seed', rarity: 'legendary', quantity: 1, image: 'Assets/PlantSeeds/Royalstalkseeds.png' },
+                    { id: 10, name: 'Bamboo Bean', type: 'seed', rarity: 'common', quantity: 6, image: 'Assets/PlantSeeds/Bamboobeanseeds.png' },
+                    { id: 11, name: 'Choco Vine', type: 'seed', rarity: 'uncommon', quantity: 2, image: 'Assets/PlantSeeds/Chocovineseeds.png' },
+                    { id: 12, name: 'Cloud Creeper', type: 'seed', rarity: 'uncommon', quantity: 3, image: 'Assets/PlantSeeds/Cloudcreeperseeds.png' },
                 ];
             }
 
             createInventoryItemElement(item) {
                 const itemDiv = document.createElement('div');
-                itemDiv.className = `inventory-item ${item.type}`;
-                itemDiv.onclick = () => this.onInventoryItemClick(item);
+                itemDiv.className = `inventory-item ${item.type} rarity-${item.rarity}`;
+                
+                // Add drag functionality
+                itemDiv.addEventListener('mousedown', (e) => {
+                    console.log('🖱️ DEBUG: mousedown on inventory item:', item.name);
+                    this.startDragging(e, item, itemDiv);
+                });
+                itemDiv.onclick = (e) => {
+                    // Only trigger click if not dragging
+                    if (!this.isDragging) {
+                        this.onInventoryItemClick(item);
+                    }
+                };
 
-                const rarityDot = document.createElement('div');
-                rarityDot.className = `inventory-item-rarity rarity-${item.rarity}`;
+                // Use image if available, fallback to icon
+                const iconContent = item.image 
+                    ? `<div class="inventory-item-icon" style="background-image: url('${item.image}')"></div>`
+                    : `<div class="inventory-item-icon">${item.icon || '📦'}</div>`;
 
                 itemDiv.innerHTML = `
-                    <div class="inventory-item-icon">${item.icon}</div>
-                    <div class="inventory-item-name">${item.name}</div>
+                    ${iconContent}
                     <div class="inventory-item-quantity">× ${item.quantity}</div>
                 `;
 
-                itemDiv.appendChild(rarityDot);
                 return itemDiv;
             }
 
@@ -984,6 +1421,257 @@
                 console.log('Inventory item clicked:', item);
                 // TODO: Implement item interaction (planting, selling, etc.)
                 alert(`Selected: ${item.name}\nQuantity: ${item.quantity}\nRarity: ${item.rarity}`);
+            }
+
+            // Drag and Drop Methods
+            startDragging(e, item, sourceElement) {
+                e.preventDefault();
+                
+                console.log('🚀 DEBUG: startDragging called');
+                console.log('🚀 DEBUG: Item:', item);
+                console.log('🚀 DEBUG: Mouse position:', e.clientX, e.clientY);
+                
+                this.isDragging = true;
+                this.draggedItem = { ...item }; // Clone the item
+                
+                // Add dragging class to source element
+                sourceElement.classList.add('dragging');
+                
+                // Create drag visual
+                this.createDragElement(item);
+                
+                // Close inventory
+                this.closeInventory();
+                
+                // Update inventory immediately (decrease quantity or remove)
+                this.updateInventoryForDrag(item);
+                
+                console.log(`🚀 DEBUG: Started dragging: ${item.name}, isDragging: ${this.isDragging}`);
+            }
+
+            createDragElement(item) {
+                console.log('🎨 DEBUG: createDragElement called');
+                this.dragElement = document.createElement('div');
+                this.dragElement.className = `dragging-seed rarity-${item.rarity}`;
+                this.dragElement.style.backgroundImage = `url('${item.image}')`;
+                this.dragElement.style.pointerEvents = 'none';
+                
+                document.body.appendChild(this.dragElement);
+                console.log('🎨 DEBUG: Drag element created and added to body');
+                console.log('🎨 DEBUG: Element classes:', this.dragElement.className);
+            }
+
+            onMouseMove(e) {
+                if (!this.isDragging || !this.dragElement) {
+                    // Only log occasionally to avoid spam
+                    if (Math.random() < 0.01) {
+                        console.log('🖱️ DEBUG: onMouseMove - not dragging or no dragElement');
+                        console.log('🖱️ DEBUG: isDragging:', this.isDragging, 'dragElement:', !!this.dragElement);
+                    }
+                    return;
+                }
+                
+                // Update drag element position
+                this.dragElement.style.left = e.clientX + 'px';
+                this.dragElement.style.top = e.clientY + 'px';
+                
+                // Check if we're over a pot for visual feedback
+                this.checkPotHover(e);
+            }
+
+            checkPotHover(e) {
+                // Get element under cursor (drag element already has pointer-events: none)
+                const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+                
+                // Only log occasionally to avoid spam during hover
+                if (Math.random() < 0.05) {
+                    console.log('🎯 DEBUG: checkPotHover - elementBelow:', elementBelow?.tagName, elementBelow?.className);
+                }
+                
+                // Check if we're over a pot
+                const potElement = elementBelow?.closest('.pot');
+                
+                if (potElement) {
+                    const potIndex = parseInt(potElement.dataset.potIndex);
+                    const potData = this.pots[potIndex];
+                    
+                    if (Math.random() < 0.05) {
+                        console.log('🎯 DEBUG: Over pot', potIndex, 'state:', potData?.state);
+                    }
+                    
+                    // Check if pot is empty - just highlight, no pouring yet
+                    if (potData && potData.state === 'empty') {
+                        if (this.hoveredPot !== potIndex) {
+                            console.log('🎯 DEBUG: Setting hoveredPot to', potIndex);
+                            this.hoveredPot = potIndex;
+                            potElement.classList.add('drag-hover');
+                        }
+                    } else {
+                        // Over a non-empty pot - remove effects
+                        this.clearPotHover();
+                    }
+                } else {
+                    // Not over any pot - remove effects
+                    this.clearPotHover();
+                }
+            }
+
+            clearPotHover() {
+                if (this.hoveredPot !== null) {
+                    // Remove hover effect from pot
+                    const potElement = document.querySelector(`[data-pot-index="${this.hoveredPot}"]`);
+                    if (potElement) {
+                        potElement.classList.remove('drag-hover');
+                    }
+                    
+                    this.hoveredPot = null;
+                }
+            }
+
+            onMouseUp(e) {
+                console.log('🖱️ DEBUG: onMouseUp called');
+                console.log('🖱️ DEBUG: isDragging:', this.isDragging);
+                console.log('🖱️ DEBUG: draggedItem:', this.draggedItem?.name);
+                console.log('🖱️ DEBUG: Mouse position:', e.clientX, e.clientY);
+                
+                if (!this.isDragging) {
+                    console.log('❌ DEBUG: Not dragging, returning early');
+                    return;
+                }
+                
+                console.log(`🖱️ DEBUG: Dropped seed: ${this.draggedItem.name} at position ${e.clientX}, ${e.clientY}`);
+                
+                // Check if we're dropping over an empty pot
+                const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+                console.log('🎯 DEBUG: Element below on drop:', elementBelow?.tagName, elementBelow?.className);
+                
+                const potElement = elementBelow?.closest('.pot');
+                console.log('🎯 DEBUG: Found pot element:', !!potElement, potElement?.dataset?.potIndex);
+                
+                if (potElement) {
+                    const potIndex = parseInt(potElement.dataset.potIndex);
+                    const potData = this.pots[potIndex];
+                    
+                    console.log('🎯 DEBUG: Pot index:', potIndex, 'Pot data:', potData);
+                    
+                    // Check if pot is empty
+                    if (potData && potData.state === 'empty') {
+                        console.log('✅ DEBUG: Valid drop! Planting', this.draggedItem.name, 'in pot', potIndex);
+                        this.plantSeedInPot(potIndex);
+                        return; // plantSeedInPot will handle ending the drag
+                    } else {
+                        console.log('❌ DEBUG: Pot not empty, state:', potData?.state);
+                    }
+                } else {
+                    console.log('❌ DEBUG: No pot element found');
+                }
+                
+                // If we get here, it's not a valid drop - just end dragging
+                console.log('❌ DEBUG: Invalid drop location, ending drag');
+                this.endDragging();
+            }
+
+            endDragging() {
+                this.isDragging = false;
+                
+                // Clear pot hover effects
+                this.clearPotHover();
+                
+                // Remove drag element
+                if (this.dragElement) {
+                    // Make sure to remove any pouring class before removing element
+                    this.dragElement.classList.remove('pouring');
+                    this.dragElement.remove();
+                    this.dragElement = null;
+                }
+                
+                // Clear dragging state
+                this.draggedItem = null;
+                
+                // Remove dragging class from any elements
+                document.querySelectorAll('.inventory-item.dragging').forEach(el => {
+                    el.classList.remove('dragging');
+                });
+                
+                // Remove any lingering drag-hover classes from pots
+                document.querySelectorAll('.pot.drag-hover').forEach(el => {
+                    el.classList.remove('drag-hover');
+                });
+                
+                console.log('Drag ended');
+            }
+
+            updateInventoryForDrag(item) {
+                const inventoryItem = this.playerInventory.find(invItem => invItem.id === item.id);
+                
+                if (!inventoryItem) return;
+                
+                if (inventoryItem.quantity > 1) {
+                    // Decrease quantity by 1
+                    inventoryItem.quantity -= 1;
+                } else {
+                    // Remove item completely
+                    const index = this.playerInventory.indexOf(inventoryItem);
+                    this.playerInventory.splice(index, 1);
+                }
+                
+                console.log(`Updated inventory: ${item.name} - Remaining quantity: ${inventoryItem ? inventoryItem.quantity : 0}`);
+            }
+
+            plantSeedInPot(potIndex) {
+                console.log('🌱 DEBUG: plantSeedInPot called with potIndex:', potIndex);
+                console.log('🌱 DEBUG: dragElement exists:', !!this.dragElement);
+                console.log('🌱 DEBUG: draggedItem:', this.draggedItem?.name);
+                
+                // Clear pot hover effects first
+                this.clearPotHover();
+                
+                // Add pouring animation to the seed
+                if (this.dragElement) {
+                    console.log('🎭 DEBUG: Adding pouring class to dragElement');
+                    console.log('🎭 DEBUG: dragElement classes before:', this.dragElement.className);
+                    this.dragElement.classList.add('pouring');
+                    console.log('🎭 DEBUG: dragElement classes after:', this.dragElement.className);
+                } else {
+                    console.log('❌ DEBUG: No dragElement found!');
+                }
+                
+                // Get the pot element for visual feedback
+                const potElement = document.querySelector(`[data-pot-index="${potIndex}"]`);
+                console.log('🎯 DEBUG: Found potElement:', !!potElement);
+                if (potElement) {
+                    potElement.classList.add('drag-hover');
+                }
+                
+                console.log('⏱️ DEBUG: Starting 300ms timeout for planting animation');
+                
+                // Wait for the pouring animation, then plant the seed
+                setTimeout(() => {
+                    console.log('⏱️ DEBUG: Timeout completed, updating pot state');
+                    
+                    // Update pot state to growing
+                    if (this.pots[potIndex]) {
+                        this.pots[potIndex].state = 'growing';
+                        this.pots[potIndex].data = {
+                            state: 'growing',
+                            seedName: this.draggedItem.name,
+                            plantedTime: Date.now()
+                        };
+                        
+                        // Update pot visual
+                        const potElement = document.querySelector(`[data-pot-index="${potIndex}"]`);
+                        if (potElement) {
+                            potElement.className = 'pot growing';
+                            console.log('🎯 DEBUG: Updated pot className to:', potElement.className);
+                        }
+                    }
+                    
+                    console.log(`✅ DEBUG: Successfully planted ${this.draggedItem.name} in pot ${potIndex}`);
+                    
+                    // End the dragging operation
+                    this.endDragging();
+                    
+                }, 300); // Wait 300ms for the pouring animation
             }
 
             // Initialize plant data
