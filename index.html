@@ -385,6 +385,185 @@
                 color: #4A4A4A;
             }
         }
+
+        /* Inventory Panel Styles */
+        .inventory-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 15;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .inventory-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .inventory-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: linear-gradient(135deg, #2C3E50, #34495E);
+            border-left: 4px solid #3498DB;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+            z-index: 20;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .inventory-panel.active {
+            right: 0;
+        }
+
+        .inventory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #3498DB, #2980B9);
+            border-bottom: 3px solid #1F618D;
+            position: sticky;
+            top: 0;
+            z-index: 21;
+        }
+
+        .inventory-header h2 {
+            color: white;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            margin: 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .inventory-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .inventory-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .inventory-content {
+            padding: 20px;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .inventory-item {
+            background: linear-gradient(135deg, #4A5A6A, #34495E);
+            border: 2px solid #52708A;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .inventory-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.3);
+            border-color: #3498DB;
+        }
+
+        .inventory-item.seed {
+            background: linear-gradient(135deg, #27AE60, #229954);
+            border-color: #1E8449;
+        }
+
+        .inventory-item.seed:hover {
+            box-shadow: 0 6px 15px rgba(39, 174, 96, 0.3);
+            border-color: #27AE60;
+        }
+
+        .inventory-item-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .inventory-item-name {
+            color: white;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            margin-bottom: 5px;
+        }
+
+        .inventory-item-quantity {
+            color: #BDC3C7;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .inventory-item-rarity {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .rarity-common {
+            background: #95A5A6;
+        }
+
+        .rarity-uncommon {
+            background: #3498DB;
+        }
+
+        .rarity-rare {
+            background: #9B59B6;
+        }
+
+        .rarity-legendary {
+            background: #F39C12;
+        }
+
+        /* Empty inventory message */
+        .inventory-empty {
+            text-align: center;
+            color: #BDC3C7;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            margin-top: 40px;
+            opacity: 0.7;
+        }
+
+        .inventory-empty-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -414,6 +593,22 @@
             <button class="shop-button" id="shopButton">Shop</button>
             <button class="inventory-button" id="inventoryButton">Inventory</button>
         </div>
+        
+        <!-- Inventory Panel -->
+        <div class="inventory-panel" id="inventoryPanel">
+            <div class="inventory-header">
+                <h2>🌱 Inventory</h2>
+                <button class="inventory-close" id="inventoryClose">×</button>
+            </div>
+            <div class="inventory-content">
+                <div class="inventory-grid" id="inventoryGrid">
+                    <!-- Inventory items will be populated here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Inventory Overlay -->
+        <div class="inventory-overlay" id="inventoryOverlay"></div>
     </div>
 
     <script>
@@ -427,6 +622,7 @@
                 this.plantData = this.initializePlantData();
                 this.modifierData = this.initializeModifierData();
                 this.playerInventory = [];
+                this.isInventoryOpen = false;
                 this.init();
             }
 
@@ -446,6 +642,12 @@
                 
                 const inventoryButton = document.getElementById('inventoryButton');
                 inventoryButton.addEventListener('click', () => this.onInventoryClick());
+                
+                const inventoryClose = document.getElementById('inventoryClose');
+                inventoryClose.addEventListener('click', () => this.closeInventory());
+                
+                const inventoryOverlay = document.getElementById('inventoryOverlay');
+                inventoryOverlay.addEventListener('click', () => this.closeInventory());
             }
 
             async startGame() {
@@ -690,13 +892,98 @@
             // Inventory functionality
             onInventoryClick() {
                 console.log('Inventory button clicked!');
-                console.log('Player inventory:', this.playerInventory);
-                console.log('Modifier data:', this.modifierData);
-                // TODO: Implement inventory modal/interface
-                let inventoryText = 'Inventory (Coming Soon!)\n\n';
-                inventoryText += `Items in inventory: ${this.playerInventory.length}\n\n`;
-                inventoryText += 'Features:\n• View all your plants\n• Apply size & finish modifiers\n• Track growth progress\n• Organize your collection';
-                alert(inventoryText);
+                this.toggleInventory();
+            }
+
+            toggleInventory() {
+                if (this.isInventoryOpen) {
+                    this.closeInventory();
+                } else {
+                    this.openInventory();
+                }
+            }
+
+            openInventory() {
+                this.isInventoryOpen = true;
+                document.getElementById('inventoryPanel').classList.add('active');
+                document.getElementById('inventoryOverlay').classList.add('active');
+                this.populateInventory();
+                console.log('Inventory opened');
+            }
+
+            closeInventory() {
+                this.isInventoryOpen = false;
+                document.getElementById('inventoryPanel').classList.remove('active');
+                document.getElementById('inventoryOverlay').classList.remove('active');
+                console.log('Inventory closed');
+            }
+
+            populateInventory() {
+                const inventoryGrid = document.getElementById('inventoryGrid');
+                inventoryGrid.innerHTML = '';
+
+                // Add some dummy inventory data if empty
+                if (this.playerInventory.length === 0) {
+                    this.createDummyInventoryData();
+                }
+
+                // Populate the grid with inventory items
+                if (this.playerInventory.length === 0) {
+                    // Show empty inventory message
+                    const emptyMessage = document.createElement('div');
+                    emptyMessage.className = 'inventory-empty';
+                    emptyMessage.innerHTML = `
+                        <div class="inventory-empty-icon">📦</div>
+                        <p>Your inventory is empty!</p>
+                        <p>Buy some seeds from the shop to get started.</p>
+                    `;
+                    inventoryGrid.appendChild(emptyMessage);
+                } else {
+                    // Show inventory items
+                    this.playerInventory.forEach(item => {
+                        const itemElement = this.createInventoryItemElement(item);
+                        inventoryGrid.appendChild(itemElement);
+                    });
+                }
+            }
+
+            createDummyInventoryData() {
+                // Add some demo seed data
+                this.playerInventory = [
+                    { id: 1, name: 'Beanstalk', type: 'seed', rarity: 'common', quantity: 5, icon: '🌱' },
+                    { id: 2, name: 'Snap Pea', type: 'seed', rarity: 'common', quantity: 3, icon: '🥬' },
+                    { id: 3, name: 'Thunder Pod', type: 'seed', rarity: 'uncommon', quantity: 2, icon: '⚡' },
+                    { id: 4, name: 'Moonbean', type: 'seed', rarity: 'uncommon', quantity: 1, icon: '🌙' },
+                    { id: 5, name: 'Crystal Bean', type: 'seed', rarity: 'rare', quantity: 1, icon: '💎' },
+                    { id: 6, name: 'Fire Pod', type: 'seed', rarity: 'rare', quantity: 1, icon: '🔥' },
+                    { id: 7, name: 'Jellybean Vine', type: 'seed', rarity: 'common', quantity: 8, icon: '🍬' },
+                    { id: 8, name: 'Coffee Creeper', type: 'seed', rarity: 'common', quantity: 4, icon: '☕' },
+                    { id: 9, name: 'Golden Stalk', type: 'seed', rarity: 'legendary', quantity: 1, icon: '🏆' },
+                ];
+            }
+
+            createInventoryItemElement(item) {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `inventory-item ${item.type}`;
+                itemDiv.onclick = () => this.onInventoryItemClick(item);
+
+                const rarityDot = document.createElement('div');
+                rarityDot.className = `inventory-item-rarity rarity-${item.rarity}`;
+
+                itemDiv.innerHTML = `
+                    <div class="inventory-item-icon">${item.icon}</div>
+                    <div class="inventory-item-name">${item.name}</div>
+                    <div class="inventory-item-quantity">× ${item.quantity}</div>
+                `;
+
+                itemDiv.appendChild(rarityDot);
+                return itemDiv;
+            }
+
+            onInventoryItemClick(item) {
+                console.log('Inventory item clicked:', item);
+                // TODO: Implement item interaction (planting, selling, etc.)
+                alert(`Selected: ${item.name}\nQuantity: ${item.quantity}\nRarity: ${item.rarity}`);
             }
 
             // Initialize plant data
