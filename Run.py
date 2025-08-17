@@ -4,12 +4,30 @@ import sys
 import threading
 import time
 sys.path.append('.')
-from Setup import get_game_state, get_shop_data, get_pots_data, initialize_game
+
+# Import with error handling for deployment
+try:
+    from Setup import get_game_state, get_shop_data, get_pots_data, initialize_game
+except ImportError as e:
+    print(f"Import error: {e}")
+    # Fallback functions for deployment issues
+    def get_game_state():
+        return type('GameState', (), {"coins": 120, "pots": []})()
+    def get_shop_data():
+        return {"slots": [], "refresh_at": 0}
+    def get_pots_data():
+        return []
+    def initialize_game():
+        pass
 
 app = Flask(__name__, template_folder='.', static_folder='.')
 
-# Initialize game on server start
-initialize_game()
+# Initialize game on server start with error handling
+try:
+    initialize_game()
+    print("✅ Game initialized successfully")
+except Exception as e:
+    print(f"❌ Game initialization error: {e}")
 
 @app.route('/')
 def index():
@@ -42,15 +60,55 @@ def game_js():
 
 @app.route('/api/shop')
 def api_shop():
-    return jsonify(get_shop_data())
+    try:
+        shop_data = get_shop_data()
+        print(f"✅ Shop data retrieved: {len(shop_data.get('slots', []))} items")
+        return jsonify(shop_data)
+    except Exception as e:
+        print(f"❌ Shop data error: {e}")
+        # Return fallback data
+        return jsonify({
+            "slots": [
+                {
+                    "species_id": "beanstalk",
+                    "species_name": "Beanstalk", 
+                    "species_type": "picker",
+                    "rarity": "common",
+                    "stock": 3,
+                    "price": 120,
+                    "base_price": 120,
+                    "purchases": 0,
+                    "grow_time": 25,
+                    "base_sell": 14
+                }
+            ],
+            "refresh_at": 0,
+            "error": str(e)
+        })
 
 @app.route('/api/pots')
 def api_pots():
-    return jsonify(get_pots_data())
+    try:
+        pots_data = get_pots_data()
+        print(f"✅ Pots data retrieved: {len(pots_data)} pots")
+        return jsonify(pots_data)
+    except Exception as e:
+        print(f"❌ Pots data error: {e}")
+        return jsonify({"error": str(e), "pots": []})
 
 @app.route('/api/game-state')
 def api_game_state():
-    state = get_game_state()
+    try:
+        state = get_game_state()
+        print(f"✅ Game state retrieved: {getattr(state, 'coins', 120)} coins")
+    except Exception as e:
+        print(f"❌ Game state error: {e}")
+        # Return fallback game state
+        return jsonify({
+            "coins": 120,
+            "pots": [],
+            "error": str(e)
+        })
     
     # Reset clipper states on page load (clippers don't persist between sessions)
     # This is called when the page first loads

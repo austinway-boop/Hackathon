@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "Run.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/Assets/(.*)",
+      "dest": "/Assets/$1"
+    },
+    {
+      "src": "/Sound/(.*)",
+      "dest": "/Sound/$1"
+    },
+    {
+      "src": "/css/(.*)",
+      "dest": "/css/$1"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/js/$1"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/Run.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/Run.py"
+    }
+  ],
+  "functions": {
+    "Run.py": {
+      "maxDuration": 30
+    }
+  }
+}
