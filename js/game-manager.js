@@ -90,76 +90,25 @@ class GameManager {
         }, 500); // Give DOM time to load
     }
 
-    // Initialize game state from localStorage
-    initializeGameState() {
-        try {
-            // Load game state from localStorage
-            this.loadGameState();
-            
-            // Initialize level bars after a delay
-            setTimeout(() => {
-                console.log('🌱 DEBUG: Initializing level bars for all plants');
-                this.updateAllPlantLevelBars();
-            }, 2000); // Give DOM time to load
-            
-            // Periodically refresh level bars to ensure they're visible AND restart bean spawning if stopped
-            setInterval(() => {
-                console.log('⏰ Periodic level bar and bean spawning check...');
-                this.updateAllPlantLevelBars();
-                
-                // Check for missing clippers on plants with clippers unlocked
-                this.pots.forEach((potData, potIndex) => {
-                    if (potData && potData.clipper_unlocked && potData.instance_id) {
-                        const pot = document.getElementById(`pot-${potIndex}`);
-                        if (pot && !pot.querySelector('.plant-clipper')) {
-                            console.log(`✂️ Missing clipper for plant in pot ${potIndex} (level ${potData.level}, clipper level ${potData.clipper_level}), creating it now!`);
-                            this.createOrUpdateClipper(potIndex, potData.clipper_level || 1);
-                        }
-                    }
-                });
-                
-                // Also check all ready plants explicitly and restart spawning if needed
-                this.growingPlants.forEach((plantData, potIndex) => {
-                    if (plantData.ready && this.pots[potIndex]) {
-                        const levelBar = document.getElementById(`level-bar-${potIndex}`);
-                        if (!levelBar) {
-                            console.log(`🚨 Missing level bar for ready plant in pot ${potIndex}, creating it now!`);
-                            const potData = this.pots[potIndex];
-                            this.createPlantLevelBar(
-                                potIndex, 
-                                potData.level || 1, 
-                                potData.experience || 0, 
-                                potData.required_xp || 100
-                            );
-                        }
-                        
-                        // Check if spawning has stopped unexpectedly and restart it
-                        const potState = this.pots[potIndex]?.state;
-                        if ((potState === 'ready' || potState === 'growing') && 
-                            plantData.vineElement && plantData.vineElement.parentNode &&
-                            (!plantData.continuousSpawning || !plantData.continuousSpawning.intervalId)) {
-                            
-                            console.log(`🔄 DEBUG: Restarting bean spawning for pot ${potIndex} (was stopped unexpectedly)`);
-                            const rect = plantData.vineElement.getBoundingClientRect();
-                            this.startContinuousSpawning(
-                                potIndex, 
-                                plantData.beanImage, 
-                                rect.left + rect.width / 2, 
-                                rect.top + rect.height / 2, 
-                                plantData.seedName
-                            );
-                        }
-                    }
-                });
-            }, 5000); // Every 5 seconds
-            
-            console.log('Game state initialized from localStorage');
-        } catch (error) {
-            console.log('Could not load game state from localStorage, using defaults:', error);
-            this.initializeDefaultGameState();
-        }
+    // Initialize game state with default values (no persistence)
+    async initializeGameState() {
+        console.log('🔄 Starting fresh game session - no persistence');
         
-        // Start background shop refresh checking (now uses localStorage)
+        // Initialize with default values every time
+        this.currentMoney = 120; // Starting money
+        this.pots = Array.from({ length: 12 }, (_, i) => ({
+            index: i,
+            state: 'empty',
+            instance_id: null
+        }));
+        this.playerInventory = [
+            { id: 1, name: 'Beanstalk', type: 'seed', rarity: 'common', quantity: 1, image: 'Assets/PlantSeeds/Beanstalkseeds.png' }
+        ];
+        
+        this.updateMoneyDisplay();
+        console.log('Fresh game state initialized - no persistence');
+        
+        // Start background shop refresh checking
         this.startBackgroundShopRefresh();
         
         // Initialize audio system
@@ -345,87 +294,10 @@ class GameManager {
         this.isFullscreen = true;
     }
 
-    // Load game state from localStorage
-    loadGameState() {
-        try {
-            const savedState = localStorage.getItem('beanstalkGameState');
-            if (savedState) {
-                this.gameState = JSON.parse(savedState);
-                this.currentMoney = this.gameState.coins || 120;
-                this.currentLevel = this.gameState.level || 1;
-                this.currentXP = this.gameState.xp || 0;
-                this.playerInventory = this.gameState.inventory || [
-                    { id: 1, name: 'Beanstalk', type: 'seed', rarity: 'common', quantity: 1, image: 'Assets/PlantSeeds/Beanstalkseeds.png' }
-                ];
-                this.pots = this.gameState.pots || [];
-                this.beanCollection = new Set(this.gameState.beanCollection || []);
-                this.fireUnlocked = this.gameState.fireUnlocked || false;
-                
-                console.log('✅ Game state loaded from localStorage:', this.gameState);
-            } else {
-                // Initialize default game state
-                this.initializeDefaultGameState();
-                console.log('✅ Initialized default game state');
-            }
-            
-            this.updateMoneyDisplay();
-            this.updateLevelBar();
-            this.updatePotVisuals();
-        } catch (error) {
-            console.error('❌ Failed to load game state from localStorage:', error);
-            this.initializeDefaultGameState();
-        }
-    }
-
-    // Initialize default game state for new players
-    initializeDefaultGameState() {
-        this.currentMoney = 120;
-        this.currentLevel = 1;
-        this.currentXP = 0;
-        this.playerInventory = [
-            { id: 1, name: 'Beanstalk', type: 'seed', rarity: 'common', quantity: 1, image: 'Assets/PlantSeeds/Beanstalkseeds.png' }
-        ];
-        this.pots = Array.from({ length: 12 }, (_, i) => ({
-            index: i,
-            state: 'empty',
-            instance_id: null
-        }));
-        this.beanCollection = new Set();
-        this.fireUnlocked = false;
-        this.gameState = {
-            coins: this.currentMoney,
-            level: this.currentLevel,
-            xp: this.currentXP,
-            inventory: this.playerInventory,
-            pots: this.pots,
-            beanCollection: Array.from(this.beanCollection),
-            fireUnlocked: this.fireUnlocked,
-            plantInstances: {}
-        };
-        this.saveGameState();
-    }
-
-    // Save game state to localStorage
-    saveGameState() {
-        try {
-            const gameState = {
-                coins: this.currentMoney,
-                level: this.currentLevel,
-                xp: this.currentXP,
-                inventory: this.playerInventory,
-                pots: this.pots,
-                beanCollection: Array.from(this.beanCollection),
-                fireUnlocked: this.fireUnlocked,
-                plantInstances: this.gameState?.plantInstances || {},
-                shopData: this.shopData,
-                lastSave: Date.now()
-            };
-            
-            localStorage.setItem('beanstalkGameState', JSON.stringify(gameState));
-            console.log('💾 Game state saved to localStorage');
-        } catch (error) {
-            console.error('❌ Failed to save game state to localStorage:', error);
-        }
+    async loadGameState() {
+        // Disabled - no state persistence across refreshes
+        console.log('🔄 Game state loading disabled - staying fresh');
+        return;
     }
 
     createPots() {
@@ -693,32 +565,20 @@ class GameManager {
     }
 
     // API Functions
-    loadShopData() {
-        // Load shop data from localStorage or create new shop
-        const savedShopData = localStorage.getItem('beanstalkShopData');
-        const now = Date.now();
-        
-        if (savedShopData) {
-            const shopData = JSON.parse(savedShopData);
-            // Check if shop needs refresh (every 3 minutes = 180000ms)
-            if (now - (shopData.lastRefresh || 0) > 180000) {
-                this.createShopInventory();
+    async loadShopData() {
+        try {
+            const response = await fetch('/api/shop');
+            if (response.ok) {
+                this.shopData = await response.json();
+                console.log('Shop data loaded:', this.shopData);
             } else {
-                this.shopData = shopData;
-                console.log('Shop data loaded from localStorage:', this.shopData);
+                console.error('Failed to load shop data');
+                // Fallback to create local shop inventory if API fails
+                this.createShopInventory();
             }
-        } else {
+        } catch (error) {
+            console.error('Error loading shop data:', error);
             this.createShopInventory();
-        }
-    }
-    
-    saveShopData() {
-        if (this.shopData) {
-            localStorage.setItem('beanstalkShopData', JSON.stringify({
-                ...this.shopData,
-                lastRefresh: Date.now()
-            }));
-            console.log('💾 Shop data saved to localStorage');
         }
     }
 
@@ -869,24 +729,6 @@ class GameManager {
             { id: 19, name: 'Shadow Bean', type: 'seed', rarity: 'rare', price: 1350000, image: 'Assets/PlantSeeds/Shadowbeanseeds.png', available: true },
             { id: 20, name: 'Prism Stalk', type: 'seed', rarity: 'legendary', price: 2340000, image: 'Assets/PlantSeeds/Prismstalkseeds.png', available: true },
         ];
-        
-        // Also create shopData structure for API compatibility
-        this.shopData = {
-            slots: this.shopInventory.map((item, index) => ({
-                species_id: item.id,
-                species_name: item.name,
-                rarity: item.rarity,
-                price: item.price,
-                base_price: item.price,
-                stock: 5, // Default stock for each item
-                purchases_this_roll: 0
-            })),
-            lastRefresh: Date.now()
-        };
-        
-        // Save the new shop data
-        this.saveShopData();
-        console.log('Created new shop inventory and saved to localStorage');
     }
 
     createShopItemElement(item, slotIndex = null) {
@@ -1124,72 +966,100 @@ class GameManager {
         this.showSuccessMessage(`Successfully purchased ${item.name}! Check your inventory.`);
     }
 
-    purchaseItemFromAPI(item) {
-        console.log('🛒 DEBUG: Starting local purchase for:', item);
+    async purchaseItemFromAPI(item) {
+        console.log('🛒 DEBUG: Starting API purchase for:', item);
+        console.log('🛒 DEBUG: Sending request with slot_index:', item.slotIndex);
         
         try {
-            // Check if player has enough money
-            if (this.currentMoney < item.price) {
-                this.showErrorMessage(`💰 Not enough coins! You need ${item.price} but only have ${this.currentMoney}.`);
-                return;
-            }
+            const response = await fetch('/api/buy-seed', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    slot_index: item.slotIndex,
+                    pot_index: -1 // -1 means add to inventory instead of planting directly
+                })
+            });
+
+            console.log('🌐 DEBUG: HTTP Response status:', response.status);
+            console.log('🌐 DEBUG: HTTP Response ok:', response.ok);
             
-            // Check if item is in stock
-            if (item.stock <= 0) {
-                this.showErrorMessage('📦 This item is out of stock!');
-                return;
-            }
+            const result = await response.json();
             
-            console.log(`✅ Purchase validated - ${item.species_name} for ${item.price} coins`);
+            console.log('🔍 DEBUG: API Response:', result);
+            console.log('🔍 DEBUG: Response success:', result.success);
+            console.log('🔍 DEBUG: Response success type:', typeof result.success);
+            console.log('🔍 DEBUG: Response coins:', result.coins);
+            console.log('🔍 DEBUG: Full response keys:', Object.keys(result));
             
-            // Deduct money
-            this.currentMoney -= item.price;
-            this.updateMoneyDisplay();
-            
-            // Add to inventory
-            const existingItem = this.playerInventory.find(invItem => invItem.name === item.species_name);
-            if (existingItem) {
-                existingItem.quantity += 1;
-                console.log(`Updated existing item: ${item.species_name}, new quantity: ${existingItem.quantity}`);
+            if (result.success) {
+                console.log(`Successfully purchased ${item.species_name}!`);
+                console.log('Purchase result:', result);
+                
+                // Update local money from server response
+                this.currentMoney = result.coins;
+                this.updateMoneyDisplay();
+                
+                // Add to inventory
+                const existingItem = this.playerInventory.find(invItem => invItem.name === item.species_name);
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                    console.log(`Updated existing item: ${item.species_name}, new quantity: ${existingItem.quantity}`);
+                } else {
+                    const newItem = {
+                        id: Date.now(),
+                        name: item.species_name,
+                        type: 'seed',
+                        rarity: item.rarity,
+                        quantity: 1,
+                        image: this.getSeedImageForSpecies(item.species_id)
+                    };
+                    this.playerInventory.push(newItem);
+                    console.log(`Added new item to inventory:`, newItem);
+                }
+                
+                // Use the shop data returned from the purchase instead of making another API call
+                if (result.shop) {
+                    this.shopData = result.shop;
+                    console.log('Updated shop data from purchase response:', this.shopData);
+                }
+                this.populateShop();
+                
+                // Update inventory display if it's open
+                if (this.isInventoryOpen) {
+                    this.populateInventory();
+                }
+                
+                console.log('Current inventory after purchase:', this.playerInventory);
+                
+                // Tutorial tracking
+                this.onTutorialSeedPurchased();
+                
+                this.showSuccessMessage(`Successfully purchased ${item.species_name}! Check your inventory.`);
             } else {
-                const newItem = {
-                    id: Date.now(),
-                    name: item.species_name,
-                    type: 'seed',
-                    rarity: item.rarity,
-                    quantity: 1,
-                    image: this.getSeedImageForSpecies(item.species_id)
-                };
-                this.playerInventory.push(newItem);
-                console.log(`Added new item to inventory:`, newItem);
+                console.log('❌ DEBUG: Purchase failed - result.success is:', result.success);
+                console.log('❌ DEBUG: Full failed response:', result);
+                
+                // Update money display with server response
+                if (result.coins !== undefined) {
+                    this.currentMoney = result.coins;
+                    this.updateMoneyDisplay();
+                }
+                
+                // Check if it's an insufficient funds error
+                const currentCoins = result.coins || this.currentMoney;
+                if (currentCoins < item.price) {
+                    this.showErrorMessage(`💰 Not enough coins! You need ${item.price} but only have ${currentCoins}.`);
+                } else if (item.stock <= 0) {
+                    this.showErrorMessage('📦 This item is out of stock!');
+                } else {
+                    this.showErrorMessage('❌ Purchase failed. Please try again.');
+                }
             }
-            
-            // Update shop stock
-            if (this.shopData && this.shopData.slots && this.shopData.slots[item.slotIndex]) {
-                this.shopData.slots[item.slotIndex].stock -= 1;
-                this.shopData.slots[item.slotIndex].purchases_this_roll += 1;
-                console.log('Updated shop stock locally');
-            }
-            
-            // Save all changes to localStorage
-            this.saveGameState();
-            this.saveShopData();
-            
-            // Update displays
-            this.populateShop();
-            if (this.isInventoryOpen) {
-                this.populateInventory();
-            }
-            
-            console.log('Current inventory after purchase:', this.playerInventory);
-            
-            // Tutorial tracking
-            this.onTutorialSeedPurchased();
-            
-            this.showSuccessMessage(`Successfully purchased ${item.species_name}! Check your inventory.`);
         } catch (error) {
             console.error('Error purchasing item:', error);
-            this.showErrorMessage('❌ Purchase failed. Please try again.');
+            this.showErrorMessage('🌐 Network error. Please check your connection and try again.');
         }
     }
 
@@ -1556,27 +1426,22 @@ class GameManager {
             this.playSound('plant');
             
             try {
-                // First, create the plant instance locally
-                const plantCreated = this.createPlantInstanceOnBackend(potIndex, this.draggedItem.name);
+                // First, create the plant instance on the backend
+                await this.createPlantInstanceOnBackend(potIndex, this.draggedItem.name);
                 
-                if (plantCreated) {
-                    // Then start growing the vine visually
-                    const success = this.startVineGrowth(potIndex, this.draggedItem.name);
+                // Then start growing the vine visually
+                const success = this.startVineGrowth(potIndex, this.draggedItem.name);
+                
+                if (success) {
+                    console.log(`✅ DEBUG: Successfully planted ${this.draggedItem.name} in pot ${potIndex}`);
                     
-                    if (success) {
-                        console.log(`✅ DEBUG: Successfully planted ${this.draggedItem.name} in pot ${potIndex}`);
-                        
-                        // Tutorial tracking
-                        this.onTutorialPlantPlanted();
-                        
-                        // Now that the plant is successful, update the inventory to remove the seed
-                        this.updateInventoryForDrag(this.draggedItem);
-                    } else {
-                        console.log(`❌ DEBUG: Failed to start vine growth for ${this.draggedItem.name} in pot ${potIndex}`);
-                        // Don't remove from inventory if planting failed
-                    }
+                    // Tutorial tracking
+                    this.onTutorialPlantPlanted();
+                    
+                    // Now that the plant is successful, update the inventory to remove the seed
+                    this.updateInventoryForDrag(this.draggedItem);
                 } else {
-                    console.log(`❌ DEBUG: Failed to create plant instance for ${this.draggedItem.name} in pot ${potIndex}`);
+                    console.log(`❌ DEBUG: Failed to plant ${this.draggedItem.name} in pot ${potIndex}`);
                     // Don't remove from inventory if planting failed
                 }
             } catch (error) {
@@ -2376,88 +2241,46 @@ class GameManager {
     }
     
     // Add experience to a plant
-    addPlantExperience(instanceId, xpAmount = 1) {
+    async addPlantExperience(instanceId, xpAmount = 1) {
         try {
-            // Find the plant instance
-            const plantInstance = this.gameState.plantInstances[instanceId];
-            if (!plantInstance) {
-                console.error('❌ Plant instance not found:', instanceId);
-                return { success: false, result: null };
-            }
+            const response = await fetch('/api/add-plant-experience', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    instance_id: instanceId,
+                    xp_amount: xpAmount
+                })
+            });
             
-            // Find the pot with this instance
-            const potIndex = this.pots.findIndex(pot => pot && pot.instance_id === instanceId);
-            if (potIndex === -1) {
-                console.error('❌ Pot not found for instance:', instanceId);
-                return { success: false, result: null };
-            }
-            
-            const potData = this.pots[potIndex];
-            const oldLevel = potData.level || 1;
-            const oldExperience = potData.experience || 0;
-            let requiredXp = potData.required_xp || 100;
-            
-            // Add experience
-            potData.experience = oldExperience + xpAmount;
-            plantInstance.experience = potData.experience;
-            
-            // Check for level up
-            let newLevel = oldLevel;
-            let leveled_up = false;
-            let clipper_unlocked = false;
-            
-            while (potData.experience >= requiredXp && newLevel < 50) {
-                potData.experience -= requiredXp;
-                newLevel++;
-                leveled_up = true;
+            const data = await response.json();
+            if (data.success && data.result.leveled_up) {
+                // Update pots data FIRST with new leveling info
+                this.pots = data.pots;
+                this.updateAllPlantLevelBars();
                 
-                // Check for clipper unlock at level 25
-                if (newLevel === 25 && !potData.clipper_unlocked) {
-                    potData.clipper_unlocked = true;
-                    clipper_unlocked = true;
-                }
+                // Show level up notification - NO MORE PRESTIGE BULLSHIT
+                this.showLevelUpNotification(data.result.old_level, data.result.new_level);
                 
-                // Update required XP for next level (increases by 10% each level)
-                requiredXp = Math.floor(100 * Math.pow(1.1, newLevel - 1));
-                potData.required_xp = requiredXp;
-            }
-            
-            potData.level = newLevel;
-            plantInstance.level = newLevel;
-            plantInstance.required_xp = requiredXp;
-            
-            // Save changes
-            this.saveGameState();
-            
-            // Update level bars
-            this.updateAllPlantLevelBars();
-            
-            const result = {
-                leveled_up,
-                old_level: oldLevel,
-                new_level: newLevel,
-                experience: potData.experience,
-                required_xp: requiredXp,
-                clipper_unlocked
-            };
-            
-            // Show level up notification and handle clipper unlock
-            if (leveled_up) {
-                this.showLevelUpNotification(oldLevel, newLevel);
-                
-                // Check for clipper unlock at level 25
-                if (clipper_unlocked) {
+                // Check for clipper unlock at level 25 (PERMANENT, NO RESET)
+                if (data.result.new_level === 25 && data.result.clipper_unlocked) {
+                    // Show clipper unlock notification
                     this.showClipperUnlockNotification();
-                    console.log(`✂️ Level 25! Creating clipper for pot ${potIndex}`);
-                    this.createOrUpdateClipper(potIndex, 1);
+                    
+                    // Create clipper for this pot
+                    const potIndex = this.pots.findIndex(p => p.instance_id === instanceId);
+                    if (potIndex >= 0) {
+                        console.log(`✂️ Level 25! Creating clipper for pot ${potIndex}`);
+                        this.createOrUpdateClipper(potIndex, 1);
+                    }
                 }
             }
             
-            console.log(`⭐ Added ${xpAmount} XP to plant ${instanceId}, now level ${newLevel} (XP: ${potData.experience}/${requiredXp})`);
-            return { success: true, result };
+            return data;
         } catch (error) {
             console.error('❌ Error adding plant experience:', error);
-            return { success: false, result: null };
+            return null;
         }
     }
 
@@ -2773,55 +2596,40 @@ class GameManager {
     }
 
     // Create plant instance on backend when planting from inventory
-    createPlantInstanceOnBackend(potIndex, plantName) {
+    async createPlantInstanceOnBackend(potIndex, plantName) {
         try {
-            console.log(`🌱 DEBUG: Creating plant instance for ${plantName} in pot ${potIndex} locally`);
-            
-            // Generate unique instance ID
-            const instanceId = `plant_${Date.now()}_${potIndex}`;
-            
-            // Create pot data with leveling information
-            const potData = {
-                index: potIndex,
-                state: 'growing',
-                instance_id: instanceId,
-                species_name: plantName,
-                planted_at: Date.now(),
-                level: 1,
-                experience: 0,
-                required_xp: 100,
-                clipper_unlocked: false,
-                clipper_level: 0
-            };
-            
-            // Update pot in our local data
-            if (!this.pots) this.pots = [];
-            this.pots[potIndex] = potData;
-            
-            // Store plant instance data
-            if (!this.gameState.plantInstances) {
-                this.gameState.plantInstances = {};
+            const response = await fetch('/api/plant-from-inventory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    species_name: plantName,
+                    pot_index: potIndex
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                // Update pots data with the leveling information
+                this.pots = result.pots; // This contains the leveling data!
+                
+                // Create level bar for the newly planted crop
+                setTimeout(() => {
+                    const potData = this.pots[potIndex];
+
+                    if (potData && potData.instance_id) {
+                        this.createPlantLevelBar(potIndex, potData.level || 1, potData.experience || 0, potData.required_xp || 100);
+                        console.log(`🌱 DEBUG: Created level bar for ${plantName} - Level: ${potData.level}, XP: ${potData.experience}/${potData.required_xp}`);
+                    }
+                }, 500); // Longer delay to ensure DOM is ready
+                
+                console.log(`✅ Successfully created plant instance for ${plantName} in pot ${potIndex}`);
+                return true;
+            } else {
+                console.error('❌ Failed to create plant instance on backend:', result.message);
+                return false;
             }
-            this.gameState.plantInstances[instanceId] = {
-                species_name: plantName,
-                planted_at: Date.now(),
-                level: 1,
-                experience: 0,
-                required_xp: 100,
-                pot_index: potIndex
-            };
-            
-            // Save all changes
-            this.saveGameState();
-            
-            // Create level bar for the newly planted crop
-            setTimeout(() => {
-                this.createPlantLevelBar(potIndex, potData.level || 1, potData.experience || 0, potData.required_xp || 100);
-                console.log(`🌱 DEBUG: Created level bar for ${plantName} - Level: ${potData.level}, XP: ${potData.experience}/${potData.required_xp}`);
-            }, 500); // Longer delay to ensure DOM is ready
-            
-            console.log(`✅ Successfully created plant instance for ${plantName} in pot ${potIndex}`);
-            return true;
         } catch (error) {
             console.error('❌ Error creating plant instance:', error);
             return false;
@@ -3442,25 +3250,44 @@ class GameManager {
         this.currentMoney += amount;
         this.updateMoneyDisplay();
         
-        // Auto-save game state after earning (debounced)
-        this.debouncedAutoSave();
+        // Money sync disabled - no persistence across refreshes
+        // this.debouncedSyncMoney();
         
         // Play coin sound effect
         this.playSound('coin');
     }
 
-    // Auto-save game state (replaces server sync)
-    autoSaveGameState() {
-        this.saveGameState();
-        console.log('💰 DEBUG: Money and game state auto-saved locally:', this.currentMoney);
+    // Sync money to server
+    async syncMoneyToServer() {
+        try {
+            console.log('💰 DEBUG: Syncing money to server:', this.currentMoney);
+            const response = await fetch('/api/update-money', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    coins: this.currentMoney
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log('💰 DEBUG: Money synced successfully:', result);
+            } else {
+                console.error('❌ Failed to sync money to server:', response.status);
+            }
+        } catch (error) {
+            console.error('❌ Error syncing money to server:', error);
+        }
     }
 
-    // Debounced auto-save - wait 1 second after last change to save
-    debouncedAutoSave() {
+    // Debounced money sync to avoid spamming the server
+    debouncedSyncMoney() {
         clearTimeout(this.moneySyncTimeout);
         this.moneySyncTimeout = setTimeout(() => {
-            this.autoSaveGameState();
-        }, 1000); // Auto-save 1 second after last change
+            this.syncMoneyToServer();
+        }, 1000); // Sync money 1 second after last bean collection
     }
 
     // ===== LEVEL SYSTEM =====
