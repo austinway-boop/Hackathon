@@ -112,7 +112,7 @@ class Shop:
 class GameState:
     """Main game state manager"""
     def __init__(self):
-        self.coins = 1000  # Starting coins - increased so players can actually buy seeds
+        self.coins = 120  # Starting coins
         self.pots: List[Pot] = [Pot(i) for i in range(12)]
         self.plant_instances: Dict[str, PlantInstance] = {}
         self.shop = Shop()
