@@ -90,23 +90,78 @@ class GameManager {
         }, 500); // Give DOM time to load
     }
 
-    // Initialize game state with default values (no persistence)
+    // Initialize game state from API
     async initializeGameState() {
-        console.log('🔄 Starting fresh game session - no persistence');
-        
-        // Initialize with default values every time
-        this.currentMoney = 120; // Starting money
-        this.pots = Array.from({ length: 12 }, (_, i) => ({
-            index: i,
-            state: 'empty',
-            instance_id: null
-        }));
-        this.playerInventory = [
-            { id: 1, name: 'Beanstalk', type: 'seed', rarity: 'common', quantity: 1, image: 'Assets/PlantSeeds/Beanstalkseeds.png' }
-        ];
-        
-        this.updateMoneyDisplay();
-        console.log('Fresh game state initialized - no persistence');
+        try {
+            const response = await fetch('/api/game-state');
+            if (response.ok) {
+                const gameState = await response.json();
+                this.currentMoney = gameState.coins;
+                this.updateMoneyDisplay();
+                
+                // Load pots data and initialize level bars
+                this.pots = gameState.pots || [];
+                setTimeout(() => {
+                    console.log('🌱 DEBUG: Initializing level bars for all plants');
+                    this.updateAllPlantLevelBars();
+                }, 2000); // Give DOM time to load
+                
+                // Periodically refresh level bars to ensure they're visible AND restart bean spawning if stopped
+                setInterval(() => {
+                    console.log('⏰ Periodic level bar and bean spawning check...');
+                    this.updateAllPlantLevelBars();
+                    
+                    // Check for missing clippers on plants with clippers unlocked
+                    this.pots.forEach((potData, potIndex) => {
+                        if (potData && potData.clipper_unlocked && potData.instance_id) {
+                            const pot = document.getElementById(`pot-${potIndex}`);
+                            if (pot && !pot.querySelector('.plant-clipper')) {
+                                console.log(`✂️ Missing clipper for plant in pot ${potIndex} (level ${potData.level}, clipper level ${potData.clipper_level}), creating it now!`);
+                                this.createOrUpdateClipper(potIndex, potData.clipper_level || 1);
+                            }
+                        }
+                    });
+                    
+                    // Also check all ready plants explicitly and restart spawning if needed
+                    this.growingPlants.forEach((plantData, potIndex) => {
+                        if (plantData.ready && this.pots[potIndex]) {
+                            const levelBar = document.getElementById(`level-bar-${potIndex}`);
+                            if (!levelBar) {
+                                console.log(`🚨 Missing level bar for ready plant in pot ${potIndex}, creating it now!`);
+                                const potData = this.pots[potIndex];
+                                this.createPlantLevelBar(
+                                    potIndex, 
+                                    potData.level || 1, 
+                                    potData.experience || 0, 
+                                    potData.required_xp || 100
+                                );
+                            }
+                            
+                            // Check if spawning has stopped unexpectedly and restart it
+                            const potState = this.pots[potIndex]?.state;
+                            if ((potState === 'ready' || potState === 'growing') && 
+                                plantData.vineElement && plantData.vineElement.parentNode &&
+                                (!plantData.continuousSpawning || !plantData.continuousSpawning.intervalId)) {
+                                
+                                console.log(`🔄 DEBUG: Restarting bean spawning for pot ${potIndex} (was stopped unexpectedly)`);
+                                const rect = plantData.vineElement.getBoundingClientRect();
+                                this.startContinuousSpawning(
+                                    potIndex, 
+                                    plantData.beanImage, 
+                                    rect.left + rect.width / 2, 
+                                    rect.top + rect.height / 2, 
+                                    plantData.seedName
+                                );
+                            }
+                        }
+                    });
+                }, 5000); // Every 5 seconds
+                
+                console.log('Game state initialized from API');
+            }
+        } catch (error) {
+            console.log('Could not load game state from API, using defaults:', error);
+        }
         
         // Start background shop refresh checking
         this.startBackgroundShopRefresh();
@@ -295,9 +350,27 @@ class GameManager {
     }
 
     async loadGameState() {
-        // Disabled - no state persistence across refreshes
-        console.log('🔄 Game state loading disabled - staying fresh');
-        return;
+        try {
+            const response = await fetch('/api/game-state');
+            this.gameState = await response.json();
+            
+            // Only sync money from server if our local money hasn't increased from bean collection
+            console.log('💰 DEBUG: Loading game state. Current money:', this.currentMoney, 'Server money:', this.gameState.coins);
+            if (this.currentMoney <= 100) { // Only sync if we're at starting amount or below
+                console.log('💰 DEBUG: Syncing money from server (no local earnings detected)');
+                this.currentMoney = this.gameState.coins;
+                this.updateMoneyDisplay();
+            } else {
+                console.log('💰 DEBUG: Keeping local money (bean earnings detected):', this.currentMoney);
+                // Send our earned money to the server
+                this.syncMoneyToServer();
+            }
+            
+            this.updatePotVisuals();
+            console.log('✅ Game state loaded:', this.gameState);
+        } catch (error) {
+            console.error('❌ Failed to load game state:', error);
+        }
     }
 
     createPots() {
@@ -3250,8 +3323,8 @@ class GameManager {
         this.currentMoney += amount;
         this.updateMoneyDisplay();
         
-        // Money sync disabled - no persistence across refreshes
-        // this.debouncedSyncMoney();
+        // Sync money to server after earning (debounced)
+        this.debouncedSyncMoney();
         
         // Play coin sound effect
         this.playSound('coin');
