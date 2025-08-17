@@ -14,7 +14,18 @@ except ImportError as e:
     def get_game_state():
         return {"coins": 120, "pots": []}
     def get_shop_data():
-        return {"slots": [], "refresh_at": 0}
+        return {
+            "slots": [
+                {"species_id": "beanstalk", "species_name": "Beanstalk", "species_type": "picker", "rarity": "common", "stock": 3, "price": 120, "base_price": 120, "purchases": 0, "grow_time": 25, "base_sell": 14},
+                {"species_id": "snap_pea", "species_name": "Snap Pea", "species_type": "picker", "rarity": "common", "stock": 4, "price": 560, "base_price": 560, "purchases": 0, "grow_time": 75, "base_sell": 90},
+                {"species_id": "jellybean_vine", "species_name": "Jellybean Vine", "species_type": "picker", "rarity": "uncommon", "stock": 2, "price": 1285, "base_price": 1285, "purchases": 0, "grow_time": 90, "base_sell": 170},
+                {"species_id": "bamboo_bean", "species_name": "Bamboo-Bean", "species_type": "cutter", "rarity": "uncommon", "stock": 2, "price": 5410, "base_price": 5410, "purchases": 0, "grow_time": 120, "base_sell": 300},
+                {"species_id": "coffee_beanstalk", "species_name": "Coffee Beanstalk", "species_type": "picker", "rarity": "uncommon", "stock": 3, "price": 9300, "base_price": 9300, "purchases": 0, "grow_time": 120, "base_sell": 540},
+                {"species_id": "thunder_pod", "species_name": "Thunder Pod", "species_type": "cutter", "rarity": "rare", "stock": 1, "price": 17000, "base_price": 17000, "purchases": 0, "grow_time": 150, "base_sell": 970},
+                {"species_id": "frost_pea", "species_name": "Frost Pea", "species_type": "picker", "rarity": "rare", "stock": 1, "price": 31000, "base_price": 31000, "purchases": 0, "grow_time": 150, "base_sell": 2700}
+            ],
+            "refresh_at": 0
+        }
     def get_pots_data():
         return []
     def initialize_game():
@@ -42,7 +53,18 @@ def api_shop():
     try:
         return jsonify(get_shop_data())
     except Exception as e:
-        return jsonify({"error": str(e), "slots": [], "refresh_at": 0})
+        # Return fallback data with correct prices
+        return jsonify({
+            "slots": [
+                {"species_id": "beanstalk", "species_name": "Beanstalk", "species_type": "picker", "rarity": "common", "stock": 3, "price": 120, "base_price": 120, "purchases": 0, "grow_time": 25, "base_sell": 14},
+                {"species_id": "snap_pea", "species_name": "Snap Pea", "species_type": "picker", "rarity": "common", "stock": 4, "price": 560, "base_price": 560, "purchases": 0, "grow_time": 75, "base_sell": 90},
+                {"species_id": "jellybean_vine", "species_name": "Jellybean Vine", "species_type": "picker", "rarity": "uncommon", "stock": 2, "price": 1285, "base_price": 1285, "purchases": 0, "grow_time": 90, "base_sell": 170},
+                {"species_id": "bamboo_bean", "species_name": "Bamboo-Bean", "species_type": "cutter", "rarity": "uncommon", "stock": 2, "price": 5410, "base_price": 5410, "purchases": 0, "grow_time": 120, "base_sell": 300},
+                {"species_id": "coffee_beanstalk", "species_name": "Coffee Beanstalk", "species_type": "picker", "rarity": "uncommon", "stock": 3, "price": 9300, "base_price": 9300, "purchases": 0, "grow_time": 120, "base_sell": 540}
+            ],
+            "refresh_at": 0,
+            "error": str(e)
+        })
 
 @app.route('/api/pots')
 def api_pots():
