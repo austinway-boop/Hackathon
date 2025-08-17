@@ -27,6 +27,12 @@ class PlantInstance:
         self.picks_done = 0
         self.rarity = rarity  # {'size': 'normal'|'large'|'massive', 'finish': 'none'|'shiny'|'golden'}
         self.ready_state = 'growing'  # 'growing'|'ready'|'harvested'
+        
+        # Leveling system
+        self.level = 1
+        self.experience = 0
+        self.clipper_unlocked = False
+        self.clipper_level = 0
 
 class Pot:
     """Represents a planting pot"""
@@ -117,7 +123,17 @@ class GameState:
         self.plant_instances: Dict[str, PlantInstance] = {}
         self.shop = Shop()
         self.last_save = time.time()
+        
+        # Reset all clipper states on initialization (they don't persist)
+        self.reset_all_clipper_states()
 
+    def reset_all_clipper_states(self):
+        """Reset all clipper states - clippers don't persist between sessions"""
+        for instance in self.plant_instances.values():
+            instance.clipper_unlocked = False
+            instance.clipper_level = 0
+            instance.clipper_experience = 0
+    
     def generate_rarity(self) -> Dict[str, str]:
         """Generate random rarity for a plant"""
         import random
@@ -159,6 +175,123 @@ class GameState:
             multiplier *= 6.0  # 500% more valuable (6x multiplier)
         
         return multiplier
+
+    def get_experience_required_for_level(self, level: int, species_id: str) -> int:
+        """Calculate experience required for a specific level based on plant cost (cheaper plants level easier)"""
+        species = PLANT_SPECIES[species_id]
+        # Much easier leveling - especially for cheaper plants
+        # Beanstalk (120 cost) should be easy to max out
+        if species.seed_cost <= 120:
+            base_xp = 5  # Very easy for normal beanstalk
+        elif species.seed_cost <= 500:
+            base_xp = 8  # Still pretty easy for mid-tier
+        elif species.seed_cost <= 1000:
+            base_xp = 12  # Moderate for expensive plants
+        else:
+            base_xp = 15  # Harder for very expensive plants
+        
+        # Much gentler curve - almost linear growth
+        return int(base_xp + (level - 1) * 2)  # Almost linear growth, just +2 XP per level
+    
+    def add_plant_experience(self, instance_id: str, xp_amount: int) -> Dict[str, Any]:
+        """Add experience to a plant and handle leveling up - INFINITE SCALING"""
+        if instance_id not in self.plant_instances:
+            return {"leveled_up": False, "new_level": 1}
+        
+        instance = self.plant_instances[instance_id]
+        old_level = instance.level
+        instance.experience += xp_amount
+        
+        # INFINITE LEVELING - NO CAP, NO RESET, JUST PURE PROGRESSION
+        while True:
+            required_xp = self.get_experience_required_for_level(instance.level + 1, instance.species_id)
+            if instance.experience >= required_xp:
+                instance.experience -= required_xp
+                instance.level += 1
+                
+                # Unlock clippers at level 25 but DON'T RESET
+                if instance.level == 25 and not getattr(instance, 'clipper_unlocked', False):
+                    instance.clipper_unlocked = True
+                    instance.clipper_level = 1
+                    instance.clipper_experience = 0
+            else:
+                break
+        
+        return {
+            "leveled_up": instance.level > old_level,
+            "old_level": old_level,
+            "new_level": instance.level,
+            "experience": instance.experience,
+            "clipper_unlocked": getattr(instance, 'clipper_unlocked', False),
+            "clipper_level": getattr(instance, 'clipper_level', 0)
+        }
+    
+    def add_clipper_experience(self, instance_id: str, xp_amount: float) -> Dict[str, Any]:
+        """Add experience to a clipper and handle leveling up"""
+        if instance_id not in self.plant_instances:
+            return {"leveled_up": False, "new_level": 0}
+        
+        instance = self.plant_instances[instance_id]
+        
+        # Initialize clipper attributes if not present
+        if not hasattr(instance, 'clipper_level'):
+            instance.clipper_level = 0
+        if not hasattr(instance, 'clipper_experience'):
+            instance.clipper_experience = 0
+        if not hasattr(instance, 'clipper_unlocked'):
+            instance.clipper_unlocked = False
+            
+        # Only add XP if clippers are unlocked
+        if not instance.clipper_unlocked:
+            return {"leveled_up": False, "new_level": 0}
+        
+        old_level = instance.clipper_level
+        instance.clipper_experience += xp_amount
+        
+        # Check for clipper level up (max clipper level is 25)
+        while instance.clipper_level < 25:
+            # Simpler XP requirement for clippers
+            required_xp = 100 * (instance.clipper_level ** 1.2)
+            if instance.clipper_experience >= required_xp:
+                instance.clipper_experience -= required_xp
+                instance.clipper_level += 1
+            else:
+                break
+        
+        return {
+            "leveled_up": instance.clipper_level > old_level,
+            "old_level": old_level,
+            "new_level": instance.clipper_level,
+            "experience": instance.clipper_experience
+        }
+    
+    def get_plant_level_multipliers(self, instance_id: str) -> Dict[str, float]:
+        """Get all level-based multipliers for a plant - BALANCED INFINITE SCALING"""
+        if instance_id not in self.plant_instances:
+            return {"money": 1.0, "spawn_rate": 1.0, "special_chance": 1.0}
+        
+        instance = self.plant_instances[instance_id]
+        level = instance.level
+        
+        # MONEY MULTIPLIER: More balanced logarithmic growth
+        # Level 1: 1x, Level 10: 1.9x, Level 25: 3x, Level 50: 4x, Level 100: 5.5x, Level 200: 7x
+        # Uses square root for diminishing returns
+        import math
+        money_multiplier = 1.0 + math.sqrt(level - 1) * 0.5
+        
+        # SPAWN RATE: Reasonable increase (not too crazy)
+        # Level 1: 1x, Level 25: 1.5x, Level 50: 2x, Level 100: 3x
+        spawn_rate_multiplier = 1.0 + math.sqrt(level - 1) * 0.2
+        
+        # SPECIAL CHANCE: Better rare beans but not insane
+        # Level 1: 1x, Level 25: 2x, Level 50: 3x, Level 100: 4x
+        special_chance_multiplier = 1.0 + math.log(level + 1) * 0.3
+        
+        return {
+            "money": money_multiplier,
+            "spawn_rate": spawn_rate_multiplier,
+            "special_chance": special_chance_multiplier
+        }
 
     def buy_seed(self, slot_index: int, pot_index: int = -1) -> bool:
         """Buy a seed and optionally plant it in a pot. If pot_index is -1, add to inventory"""
@@ -246,7 +379,10 @@ class GameState:
                     'planted_at': v.planted_at,
                     'picks_done': v.picks_done,
                     'rarity': v.rarity,
-                    'ready_state': v.ready_state
+                    'ready_state': v.ready_state,
+                    'level': v.level,
+                    'experience': v.experience
+                    # NOTE: Clipper states are NOT saved - they reset each session
                 } for k, v in self.plant_instances.items()
             },
             'shop': {
@@ -373,6 +509,9 @@ def get_pots_data():
         if pot.instance_id and pot.instance_id in state.plant_instances:
             instance = state.plant_instances[pot.instance_id]
             species = PLANT_SPECIES[instance.species_id]
+            multipliers = state.get_plant_level_multipliers(pot.instance_id)
+            required_xp = state.get_experience_required_for_level(instance.level + 1, instance.species_id)
+            
             pot_data.update({
                 'species_name': species.name,
                 'species_type': species.type,
@@ -380,7 +519,14 @@ def get_pots_data():
                 'picks_done': instance.picks_done,
                 'rarity': instance.rarity,
                 'ready_state': instance.ready_state,
-                'grow_time': species.grow_time
+                'grow_time': species.grow_time,
+                'level': instance.level,
+                'experience': instance.experience,
+                'required_xp': required_xp,
+                'clipper_unlocked': getattr(instance, 'clipper_unlocked', False),
+                'clipper_level': getattr(instance, 'clipper_level', 0),
+                'clipper_experience': getattr(instance, 'clipper_experience', 0),
+                'multipliers': multipliers
             })
         
         pots_data.append(pot_data)

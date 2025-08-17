@@ -4,14 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grow A Beanstock</title>
-    
-    <!-- CSS Modules -->
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/ui-components.css">
-    <link rel="stylesheet" href="css/game-elements.css">
-    <link rel="stylesheet" href="css/animations.css">
-    <link rel="stylesheet" href="css/day-night-cycle.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- Shop Notification Banner -->
@@ -69,49 +62,11 @@
     </div>
 
     <div class="game-container" id="gameContainer">
-        <!-- Day/Night Cycle Background -->
-        <div class="day-night-container">
-            <!-- Stars -->
-            <div class="stars">
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-                <div class="star"></div>
-            </div>
-            
-            <!-- Day Clouds -->
-            <div class="day-clouds">
-                <div class="day-cloud cloud1"></div>
-                <div class="day-cloud cloud2"></div>
-                <div class="day-cloud cloud3"></div>
-                <div class="day-cloud cloud4"></div>
-                <div class="day-cloud cloud5"></div>
-                <div class="day-cloud cloud6"></div>
-                <div class="day-cloud cloud7"></div>
-                <div class="day-cloud cloud8"></div>
-            </div>
-            
-            <!-- Gradient Overlay -->
-            <div class="gradient-overlay"></div>
-        </div>
-        
         <div class="background"></div>
+        
+        <div class="clouds-container" id="cloudsContainer">
+            <!-- Clouds will be dynamically added here -->
+        </div>
 
         <div class="pots-container" id="potsContainer">
             <!-- 12 pots will be dynamically added here -->
@@ -273,9 +228,6 @@
         <div class="burn-modal-overlay" id="burnModalOverlay"></div>
     </div>
 
-    <!-- JavaScript Modules -->
-    <script src="js/floating-beans.js"></script>
-    <script src="js/game-manager.js"></script>
-    <script src="js/main.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>

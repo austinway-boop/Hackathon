@@ -23,6 +23,23 @@ def assets(filename):
 def sounds(filename):
     return send_from_directory('Sound', filename)
 
+@app.route('/css/<path:filename>')
+def css_files(filename):
+    return send_from_directory('css', filename)
+
+@app.route('/js/<path:filename>')
+def js_files(filename):
+    return send_from_directory('js', filename)
+
+# Legacy routes for backwards compatibility
+@app.route('/styles.css')
+def styles():
+    return send_from_directory('.', 'styles.css')
+
+@app.route('/game.js')
+def game_js():
+    return send_from_directory('.', 'game.js')
+
 @app.route('/api/shop')
 def api_shop():
     return jsonify(get_shop_data())
@@ -34,6 +51,11 @@ def api_pots():
 @app.route('/api/game-state')
 def api_game_state():
     state = get_game_state()
+    
+    # Reset clipper states on page load (clippers don't persist between sessions)
+    # This is called when the page first loads
+    state.reset_all_clipper_states()
+    
     return jsonify({
         'coins': state.coins,
         'shop': get_shop_data(),
@@ -131,10 +153,114 @@ def api_burn_plant():
         'pots': get_pots_data()
     })
 
+@app.route('/api/add-clipper-experience', methods=['POST'])
+def api_add_clipper_experience():
+    print("✂️ DEBUG: Add clipper experience request received")
+    data = request.json
+    instance_id = data.get('instance_id')
+    xp_amount = data.get('xp_amount', 0.5)
+    
+    if not instance_id:
+        print("❌ DEBUG: Invalid instance_id:", instance_id)
+        return jsonify({'success': False, 'message': 'Invalid instance ID'}), 400
+    
+    state = get_game_state()
+    result = state.add_clipper_experience(instance_id, xp_amount)
+    
+    if result.get('leveled_up'):
+        print(f"✂️ DEBUG: Clipper {instance_id} leveled up from {result['old_level']} to {result['new_level']}!")
+    
+    return jsonify({
+        'success': True,
+        'result': result,
+        'pots': get_pots_data()
+    })
+
+@app.route('/api/add-plant-experience', methods=['POST'])
+def api_add_plant_experience():
+    print("⭐ DEBUG: Add plant experience request received")
+    data = request.json
+    instance_id = data.get('instance_id')
+    xp_amount = data.get('xp_amount', 1)
+    
+    if not instance_id:
+        print("❌ DEBUG: Invalid instance_id:", instance_id)
+        return jsonify({'success': False, 'message': 'Invalid instance ID'}), 400
+    
+    state = get_game_state()
+    result = state.add_plant_experience(instance_id, xp_amount)
+    
+    if result['leveled_up']:
+        print(f"🎉 DEBUG: Plant {instance_id} leveled up from {result['old_level']} to {result['new_level']}!")
+        if result.get('clipper_unlocked'):
+            print(f"✂️ DEBUG: Clippers unlocked for plant {instance_id}!")
+    
+    return jsonify({
+        'success': True,
+        'result': result,
+        'pots': get_pots_data()
+    })
+
+@app.route('/api/plant-from-inventory', methods=['POST'])
+def api_plant_from_inventory():
+    print("🌱 DEBUG: Plant from inventory request received")
+    data = request.json
+    species_name = data.get('species_name')
+    pot_index = data.get('pot_index')
+    
+    if not species_name or pot_index is None:
+        print(f"❌ DEBUG: Invalid data - species_name: {species_name}, pot_index: {pot_index}")
+        return jsonify({'success': False, 'message': 'Invalid species name or pot index'}), 400
+    
+    state = get_game_state()
+    
+    # Validate pot index and check if pot is available
+    if pot_index >= len(state.pots):
+        print(f"❌ DEBUG: Pot index {pot_index} out of range, have {len(state.pots)} pots")
+        return jsonify({'success': False, 'message': 'Pot index out of range'}), 400
+    
+    pot = state.pots[pot_index]
+    if pot.state != 'empty':
+        print(f"❌ DEBUG: Pot {pot_index} is not empty, state: {pot.state}")
+        return jsonify({'success': False, 'message': 'Pot is not available for planting'}), 400
+    
+    # Find the species in the plant species
+    from Setup import PLANT_SPECIES, PlantInstance
+    species_id = None
+    for sid, species in PLANT_SPECIES.items():
+        if species.name == species_name:
+            species_id = sid
+            break
+    
+    if not species_id:
+        print(f"❌ DEBUG: Species '{species_name}' not found")
+        return jsonify({'success': False, 'message': 'Species not found'}), 400
+    
+    # Create plant instance
+    instance_id = f"plant_{time.time()}_{pot_index}"
+    rarity = state.generate_rarity()
+    instance = state.plant_instances[instance_id] = PlantInstance(species_id, time.time(), rarity)
+    
+    # Plant in pot
+    pot.instance_id = instance_id
+    pot.state = 'growing'
+    
+    print(f"🌱 DEBUG: Successfully planted {species_name} (instance_id: {instance_id}) in pot {pot_index}")
+    
+    return jsonify({
+        'success': True,
+        'instance_id': instance_id,
+        'pots': get_pots_data()
+    })
+
 def console_command_listener():
     """Listen for console commands in a separate thread"""
     print("\n🎮 Console Commands Available:")
-    print("   Startslot - Launch the slot machine mini-game")
+    print("   Startslot  - Launch the slot machine mini-game")
+    print("   Level24    - Level up all plants to level 24 (one away from clippers)")
+    print("   Level25    - Level up to 25 (unlocks clippers, 3x money)")
+    print("   Level50    - Level up to 50 (4x money multiplier)")
+    print("   Level100   - Level up to 100 (5.5x money multiplier)")
     print("   Type commands below (press Ctrl+C to stop server)\n")
     
     try:
@@ -154,10 +280,128 @@ def console_command_listener():
                     except Exception as e:
                         print(f"❌ Error starting slot machine: {e}")
                 
+                elif command == "level24":
+                    print("⚡ DEBUG: Leveling up all plants to level 24...")
+                    try:
+                        from Setup import get_game_state
+                        state = get_game_state()
+                        
+                        # Level up all existing plant instances to level 24
+                        for instance_id, plant in state.plant_instances.items():
+                            plant.level = 24
+                            plant.experience = 0  # Reset XP to 0 at new level
+                            plant.clipper_unlocked = False  # Not unlocked yet
+                            plant.clipper_level = 0
+                            plant.clipper_experience = 0
+                            
+                            # Calculate proper XP requirement for level 25
+                            species_id = plant.species_id
+                            required_xp = state.get_experience_required_for_level(25, species_id)
+                            print(f"   ✅ Leveled up plant {instance_id} to level 24 (needs {required_xp} XP for level 25)")
+                        
+                        # Update all pots to reflect the new levels
+                        for pot in state.pots:
+                            if pot.instance_id and pot.instance_id in state.plant_instances:
+                                plant = state.plant_instances[pot.instance_id]
+                                pot.level = 24
+                                pot.experience = 0
+                                # Use the proper XP calculation from the game's formula
+                                pot.required_xp = state.get_experience_required_for_level(25, plant.species_id)
+                                pot.clipper_unlocked = False
+                                pot.clipper_level = 0
+                                print(f"   ✅ Updated pot {pot.instance_id} to level 24 (needs {pot.required_xp} XP for level 25)")
+                        
+                        print("🎉 All plants have been leveled up to level 24!")
+                        print("   Collect a few beans to reach level 25 and unlock auto-clippers!")
+                        
+                    except Exception as e:
+                        print(f"❌ Error leveling up plants: {e}")
+                
+                elif command == "level25":
+                    print("⚡ DEBUG: Leveling up all plants to level 25 with clippers...")
+                    try:
+                        from Setup import get_game_state
+                        state = get_game_state()
+                        
+                        # Level up all existing plant instances to level 25
+                        for instance_id, plant in state.plant_instances.items():
+                            plant.level = 25
+                            plant.experience = 0
+                            plant.clipper_unlocked = True  # Clippers unlocked!
+                            plant.clipper_level = 1
+                            plant.clipper_experience = 0
+                            
+                            print(f"   ✅ Leveled up plant {instance_id} to level 25 with clippers!")
+                        
+                        # Update all pots to reflect the new levels
+                        for pot in state.pots:
+                            if pot.instance_id and pot.instance_id in state.plant_instances:
+                                plant = state.plant_instances[pot.instance_id]
+                                pot.level = 25
+                                pot.experience = 0
+                                pot.required_xp = state.get_experience_required_for_level(26, plant.species_id)
+                                pot.clipper_unlocked = True
+                                pot.clipper_level = 1
+                                print(f"   ✅ Updated pot {pot.instance_id} to level 25 with clippers!")
+                        
+                        print("🎉 All plants have been leveled up to level 25!")
+                        print("✂️  Auto-clippers are now active!")
+                        print("💰 Money multiplier: 3x (balanced scaling)")
+                        
+                    except Exception as e:
+                        print(f"❌ Error leveling up plants: {e}")
+                
+                elif command == "level50":
+                    print("🔥 Leveling up all plants to level 50...")
+                    try:
+                        from Setup import get_game_state
+                        state = get_game_state()
+                        
+                        for instance_id, plant in state.plant_instances.items():
+                            plant.level = 50
+                            plant.experience = 0
+                            plant.clipper_unlocked = True
+                            plant.clipper_level = 5
+                            plant.clipper_experience = 0
+                            print(f"   ✅ Plant {instance_id} at level 50!")
+                        
+                        print("🔥 Level 50 ACTIVATED!")
+                        print("💰 Money multiplier: 4x")
+                        print("⚡ Spawn rate: 2x faster")
+                        
+                    except Exception as e:
+                        print(f"❌ Error: {e}")
+                
+                elif command == "level100":
+                    print("⚡ Leveling up all plants to level 100...")
+                    try:
+                        from Setup import get_game_state
+                        state = get_game_state()
+                        
+                        for instance_id, plant in state.plant_instances.items():
+                            plant.level = 100
+                            plant.experience = 0
+                            plant.clipper_unlocked = True
+                            plant.clipper_level = 10
+                            plant.clipper_experience = 0
+                            print(f"   ✅ Plant {instance_id} at level 100!")
+                        
+                        print("⚡ Level 100 ACTIVATED!")
+                        print("💰 Money multiplier: 5.5x")
+                        print("⚡ Spawn rate: 3x faster")
+                        print("🌟 Solid progression!")
+                        
+                    except Exception as e:
+                        print(f"❌ Error: {e}")
+                
                 elif command == "help":
                     print("\n🎮 Available Commands:")
-                    print("   startslot - Launch the slot machine mini-game")
-                    print("   help      - Show this help message")
+                    print("   startslot  - Launch the slot machine mini-game")
+                    print("   level24    - Level up to 24 (one away from clippers)")
+                    print("   level25    - Level up to 25 (unlocks clippers, 3x money)")
+                    print("   level50    - Level up to 50 (4x money)")
+                    print("   level100   - Level up to 100 (5.5x money)")
+                    print("   help       - Show this help message")
                     print("")
                 
                 elif command != "":
