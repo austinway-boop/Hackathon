@@ -257,7 +257,7 @@ def console_command_listener():
     """Listen for console commands in a separate thread"""
     print("\n🎮 Console Commands Available:")
     print("   Startslot  - Launch the slot machine mini-game")
-    print("   Level24    - Level up all plants to level 24 (one away from clippers)")
+    print("   Level24    - Level up all plants to level 24 (one away from clippers)")       
     print("   Level25    - Level up to 25 (unlocks clippers, 3x money)")
     print("   Level50    - Level up to 50 (4x money multiplier)")
     print("   Level100   - Level up to 100 (5.5x money multiplier)")

@@ -1835,29 +1835,33 @@ class GameManager {
             'Prism Stalk': 'godly'
         };
         
-        // BASE intervals (in milliseconds) - much more reasonable but still scaled by rarity
+        // BASE intervals (in milliseconds) - slower progression for early game balance
         const rarityBaseIntervals = {
-            'common': 8000,        // 8 seconds base (much slower)
-            'uncommon': 15000,     // 15 seconds base 
-            'rare': 30000,         // 30 seconds base
-            'legendary': 60000,    // 60 seconds base
-            'mythical': 120000,    // 2 minutes base
-            'ultra_mythical': 240000, // 4 minutes base
-            'godly': 480000        // 8 minutes base
+            'common': 12000,       // 12 seconds base (slower start)
+            'uncommon': 20000,     // 20 seconds base 
+            'rare': 40000,         // 40 seconds base
+            'legendary': 80000,    // 80 seconds base
+            'mythical': 160000,    // 2.67 minutes base
+            'ultra_mythical': 320000, // 5.33 minutes base
+            'godly': 600000        // 10 minutes base
         };
         
         const rarity = plantRarityMap[plantName] || 'common';
         let baseInterval = rarityBaseIntervals[rarity] || 8000;
         
-        // Apply level-based speed multiplier
+        // Apply level-based speed multiplier (slower at low levels)
         let levelMultiplier = 1.0;
         if (potIndex >= 0 && this.pots && this.pots[potIndex] && this.pots[potIndex].multipliers) {
-            // Use spawn_rate multiplier: 1.0x at level 1, 2.0x at level 25
+            // Use spawn_rate multiplier from backend
             levelMultiplier = this.pots[potIndex].multipliers.spawn_rate;
         } else if (potIndex >= 0 && this.pots && this.pots[potIndex] && this.pots[potIndex].level) {
-            // Fallback calculation if multipliers not available
+            // Fallback calculation if multipliers not available - same as backend
             const level = this.pots[potIndex].level;
-            levelMultiplier = 1.0 + (level - 1) * 1.0 / 24; // 1.0x to 2.0x
+            if (level <= 5) {
+                levelMultiplier = 0.6 + (level - 1) * 0.08;  // Very slow progression from 0.6x to 0.9x for levels 1-5
+            } else {
+                levelMultiplier = 0.9 + Math.sqrt(level - 5) * 0.1;  // Gradual increase after level 5
+            }
         }
         
         // Higher multiplier = faster spawning = lower interval
@@ -1899,14 +1903,14 @@ class GameManager {
             baseValue = 10;
         }
         
-        // Apply plant level money multiplier (0.5x at level 1, 1.0x at level 25)
+        // Apply plant level money multiplier (much more conservative scaling)
         let levelMultiplier = 1.0;
         if (potIndex >= 0 && this.pots && this.pots[potIndex] && this.pots[potIndex].multipliers) {
             levelMultiplier = this.pots[potIndex].multipliers.money;
         } else if (potIndex >= 0 && this.pots && this.pots[potIndex] && this.pots[potIndex].level) {
-            // Fallback calculation if multipliers not available
+            // Fallback calculation if multipliers not available - conservative scaling
             const level = this.pots[potIndex].level;
-            levelMultiplier = 0.5 + (level - 1) * 0.5 / 24;
+            levelMultiplier = 1.0 + Math.sqrt(level - 1) * 0.15;  // Same as backend calculation
         }
         
         // Apply rarity multipliers

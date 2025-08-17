@@ -177,21 +177,28 @@ class GameState:
         return multiplier
 
     def get_experience_required_for_level(self, level: int, species_id: str) -> int:
-        """Calculate experience required for a specific level based on plant cost (cheaper plants level easier)"""
+        """Calculate experience required for a specific level - MUCH HARDER PROGRESSION"""
         species = PLANT_SPECIES[species_id]
-        # Much easier leveling - especially for cheaper plants
-        # Beanstalk (120 cost) should be easy to max out
-        if species.seed_cost <= 120:
-            base_xp = 5  # Very easy for normal beanstalk
-        elif species.seed_cost <= 500:
-            base_xp = 8  # Still pretty easy for mid-tier
-        elif species.seed_cost <= 1000:
-            base_xp = 12  # Moderate for expensive plants
-        else:
-            base_xp = 15  # Harder for very expensive plants
         
-        # Much gentler curve - almost linear growth
-        return int(base_xp + (level - 1) * 2)  # Almost linear growth, just +2 XP per level
+        # Significantly higher base XP requirements
+        if species.seed_cost <= 120:
+            base_xp = 20  # Much harder even for cheap plants
+        elif species.seed_cost <= 600:
+            base_xp = 35  # Very hard for snap pea tier
+        elif species.seed_cost <= 2000:
+            base_xp = 50  # Extremely hard for mid-tier
+        elif species.seed_cost <= 20000:
+            base_xp = 75  # Brutally hard for expensive plants
+        elif species.seed_cost <= 100000:
+            base_xp = 110  # Insanely hard for rare plants
+        else:
+            base_xp = 150  # Nearly impossible for ultra-rare plants
+
+        # Exponential growth - gets dramatically harder at higher levels
+        import math
+        level_multiplier = 1.0 + (level - 1) * 0.6 + math.pow(level - 1, 1.4) * 0.15
+        
+        return int(base_xp * level_multiplier)
     
     def add_plant_experience(self, instance_id: str, xp_amount: int) -> Dict[str, Any]:
         """Add experience to a plant and handle leveling up - INFINITE SCALING"""
@@ -273,15 +280,18 @@ class GameState:
         instance = self.plant_instances[instance_id]
         level = instance.level
         
-        # MONEY MULTIPLIER: More balanced logarithmic growth
-        # Level 1: 1x, Level 10: 1.9x, Level 25: 3x, Level 50: 4x, Level 100: 5.5x, Level 200: 7x
-        # Uses square root for diminishing returns
+        # MONEY MULTIPLIER: Much more conservative scaling
+        # Level 1: 1x, Level 10: 1.3x, Level 25: 1.7x, Level 50: 2x, Level 100: 2.5x
+        # Uses much smaller square root multiplier for diminishing returns
         import math
-        money_multiplier = 1.0 + math.sqrt(level - 1) * 0.5
+        money_multiplier = 1.0 + math.sqrt(level - 1) * 0.15
         
-        # SPAWN RATE: Reasonable increase (not too crazy)
-        # Level 1: 1x, Level 25: 1.5x, Level 50: 2x, Level 100: 3x
-        spawn_rate_multiplier = 1.0 + math.sqrt(level - 1) * 0.2
+        # SPAWN RATE: Much slower progression, especially at low levels
+        # Level 1: 0.7x (slower than base), Level 10: 1x, Level 25: 1.2x, Level 50: 1.4x, Level 100: 1.8x
+        if level <= 5:
+            spawn_rate_multiplier = 0.6 + (level - 1) * 0.08  # Very slow progression from 0.6x to 0.9x for levels 1-5
+        else:
+            spawn_rate_multiplier = 0.9 + math.sqrt(level - 5) * 0.1  # Gradual increase after level 5
         
         # SPECIAL CHANCE: Better rare beans but not insane
         # Level 1: 1x, Level 25: 2x, Level 50: 3x, Level 100: 4x
@@ -402,50 +412,50 @@ class GameState:
 
 # Plant species definitions with rarity categories
 PLANT_SPECIES = {
-    # Common rarity - Slowed down growth times by ~40%
-    'beanstalk': PlantSpecies('beanstalk', 'Beanstalk', 'picker', 35, 14, 120, 'common'),
-    'snap_pea': PlantSpecies('snap_pea', 'Snap Pea', 'picker', 105, 90, 560, 'common'),
+    # Common rarity
+    'beanstalk': PlantSpecies('beanstalk', 'Beanstalk', 'picker', 25, 14, 120, 'common'),
+    'snap_pea': PlantSpecies('snap_pea', 'Snap Pea', 'picker', 75, 90, 560, 'common'),
     
-    # Uncommon rarity - Slowed down growth times by ~40%
-    'jellybean_vine': PlantSpecies('jellybean_vine', 'Jellybean Vine', 'picker', 125, 170, 1285, 'uncommon'),
-    'bamboo_bean': PlantSpecies('bamboo_bean', 'Bamboo-Bean', 'cutter', 170, 300, 5410, 'uncommon'),
-    'coffee_beanstalk': PlantSpecies('coffee_beanstalk', 'Coffee Beanstalk', 'picker', 170, 540, 9300, 'uncommon'),
+    # Uncommon rarity
+    'jellybean_vine': PlantSpecies('jellybean_vine', 'Jellybean Vine', 'picker', 90, 170, 1285, 'uncommon'),
+    'bamboo_bean': PlantSpecies('bamboo_bean', 'Bamboo-Bean', 'cutter', 120, 300, 5410, 'uncommon'),
+    'coffee_beanstalk': PlantSpecies('coffee_beanstalk', 'Coffee Beanstalk', 'picker', 120, 540, 9300, 'uncommon'),
     
-    # Rare rarity - Slowed down growth times by ~40%
-    'thunder_pod': PlantSpecies('thunder_pod', 'Thunder Pod', 'cutter', 210, 970, 17000, 'rare'),
-    'frost_pea': PlantSpecies('frost_pea', 'Frost Pea', 'picker', 210, 2700, 31000, 'rare'),
-    'choco_vine': PlantSpecies('choco_vine', 'Choco Vine', 'picker', 250, 3500, 35200, 'rare'),
+    # Rare rarity
+    'thunder_pod': PlantSpecies('thunder_pod', 'Thunder Pod', 'cutter', 150, 970, 17000, 'rare'),
+    'frost_pea': PlantSpecies('frost_pea', 'Frost Pea', 'picker', 150, 2700, 31000, 'rare'),
+    'choco_vine': PlantSpecies('choco_vine', 'Choco Vine', 'picker', 180, 3500, 35200, 'rare'),
     
-    # Legendary rarity - Slowed down growth times by ~40%
-    'ironvine': PlantSpecies('ironvine', 'Ironvine', 'cutter', 295, 15300, 90000, 'legendary'),
-    'honeyvine': PlantSpecies('honeyvine', 'Honeyvine', 'picker', 250, 19300, 180000, 'legendary'),
-    'sunbean': PlantSpecies('sunbean', 'Sunbean', 'picker', 340, 25500, 193000, 'legendary'),
+    # Legendary rarity
+    'ironvine': PlantSpecies('ironvine', 'Ironvine', 'cutter', 210, 15300, 90000, 'legendary'),
+    'honeyvine': PlantSpecies('honeyvine', 'Honeyvine', 'picker', 180, 19300, 180000, 'legendary'),
+    'sunbean': PlantSpecies('sunbean', 'Sunbean', 'picker', 240, 25500, 193000, 'legendary'),
     
-    # Mythical rarity - Slowed down growth times by ~40%
-    'moonbean': PlantSpecies('moonbean', 'Moonbean', 'picker', 340, 43000, 253000, 'mythical'),
-    'cloud_creeper': PlantSpecies('cloud_creeper', 'Cloud Creeper', 'picker', 380, 49000, 295000, 'mythical'),
+    # Mythical rarity
+    'moonbean': PlantSpecies('moonbean', 'Moonbean', 'picker', 240, 43000, 253000, 'mythical'),
+    'cloud_creeper': PlantSpecies('cloud_creeper', 'Cloud Creeper', 'picker', 270, 49000, 295000, 'mythical'),
     
-    # Ultra-Mythical rarity - Slowed down growth times by ~40%
-    'royal_stalk': PlantSpecies('royal_stalk', 'Royal Stalk', 'cutter', 420, 86000, 465000, 'ultra_mythical'),
-    'crystal_bean': PlantSpecies('crystal_bean', 'Crystal Bean', 'picker', 420, 120000, 600000, 'ultra_mythical'),
-    'neon_soy': PlantSpecies('neon_soy', 'Neon Soy', 'cutter', 460, 160000, 570000, 'ultra_mythical'),
+    # Ultra-Mythical rarity
+    'royal_stalk': PlantSpecies('royal_stalk', 'Royal Stalk', 'cutter', 300, 86000, 465000, 'ultra_mythical'),
+    'crystal_bean': PlantSpecies('crystal_bean', 'Crystal Bean', 'picker', 300, 120000, 600000, 'ultra_mythical'),
+    'neon_soy': PlantSpecies('neon_soy', 'Neon Soy', 'cutter', 330, 160000, 570000, 'ultra_mythical'),
     
-    # Godly rarity - Slowed down growth times by ~40%
-    'vinecorn': PlantSpecies('vinecorn', 'Vinecorn', 'cutter', 340, 210000, 1200000, 'godly'),
-    'fire_pod': PlantSpecies('fire_pod', 'Fire Pod', 'cutter', 500, 280000, 1800000, 'godly'),
-    'shadow_bean': PlantSpecies('shadow_bean', 'Shadow Bean', 'picker', 420, 320000, 3182000, 'godly'),
-    'prism_stalk': PlantSpecies('prism_stalk', 'Prism Stalk', 'picker', 670, 340000, 5620000, 'godly')
+    # Godly rarity
+    'vinecorn': PlantSpecies('vinecorn', 'Vinecorn', 'cutter', 240, 210000, 1200000, 'godly'),
+    'fire_pod': PlantSpecies('fire_pod', 'Fire Pod', 'cutter', 360, 280000, 1800000, 'godly'),
+    'shadow_bean': PlantSpecies('shadow_bean', 'Shadow Bean', 'picker', 300, 320000, 3182000, 'godly'),
+    'prism_stalk': PlantSpecies('prism_stalk', 'Prism Stalk', 'picker', 480, 340000, 5620000, 'godly')
 }
 
-# Rarity spawn chances and quantity ranges - VERY LIMITED STOCK
+# Rarity spawn chances and quantity ranges - Balanced progression
 RARITY_CONFIG = {
-    'common': {'spawn_chance': 0.50, 'min_qty': 2, 'max_qty': 5},        # 50% chance, 2-5 stock
-    'uncommon': {'spawn_chance': 0.35, 'min_qty': 1, 'max_qty': 4},     # 35% chance, 1-4 stock
-    'rare': {'spawn_chance': 0.20, 'min_qty': 1, 'max_qty': 3},         # 20% chance, 1-3 stock  
-    'legendary': {'spawn_chance': 0.10, 'min_qty': 1, 'max_qty': 2},    # 10% chance, 1-2 stock
-    'mythical': {'spawn_chance': 0.05, 'min_qty': 1, 'max_qty': 2},     # 5% chance, 1-2 stock
-    'ultra_mythical': {'spawn_chance': 0.02, 'min_qty': 1, 'max_qty': 1}, # 2% chance, 1 stock only
-    'godly': {'spawn_chance': 0.008, 'min_qty': 1, 'max_qty': 1}        # 0.8% chance, 1 stock only
+    'common': {'spawn_chance': 0.40, 'min_qty': 3, 'max_qty': 5},          # 40% chance, 3-5 stock
+    'uncommon': {'spawn_chance': 0.30, 'min_qty': 2, 'max_qty': 4},       # 30% chance, 2-4 stock
+    'rare': {'spawn_chance': 0.15, 'min_qty': 1, 'max_qty': 3},           # 15% chance, 1-3 stock  
+    'legendary': {'spawn_chance': 0.08, 'min_qty': 1, 'max_qty': 2},      # 8% chance, 1-2 stock
+    'mythical': {'spawn_chance': 0.05, 'min_qty': 1, 'max_qty': 2},       # 5% chance, 1-2 stock
+    'ultra_mythical': {'spawn_chance': 0.015, 'min_qty': 1, 'max_qty': 1}, # 1.5% chance, 1 stock only
+    'godly': {'spawn_chance': 0.005, 'min_qty': 1, 'max_qty': 1}          # 0.5% chance, 1 stock only
 }
 
 # Global game instance
